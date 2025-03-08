@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
 import { AuthenticatedRequest } from '../types/request.types';
-import { ObjectId } from 'mongodb';
+import { ErrorWithStatus } from '../types/error.types';
 
 require('dotenv').config();
 
@@ -12,31 +12,34 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-        res.status(400);
-        throw new Error('Please fill in all fields');
+        const error: ErrorWithStatus = new Error('Please fill in all fields');
+        error.status = 400
+        throw error
     }
 
-    const sanitizedName = name.trim().replace(/\s+/g, '');
+    const sanitizedName = name.trim();
     
     if (sanitizedName.length < 3 || sanitizedName.length > 15) {
-        res.status(400);
-        throw new Error('Name must be between 3 and 15 characters long');
+        const error: ErrorWithStatus = new Error('Name must be between 3 and 15 characters long');
+        error.status = 400
+        throw error
     }
 
     const sanitizedPassword = password.trim().replace(/\s+/g, '');
 
     if (sanitizedPassword.length < 8 || sanitizedPassword.length > 20) {
-        res.status(400);
-        throw new Error('Password must be between 8 and 20 characters long');
+        const error: ErrorWithStatus = new Error('Password must be between 8 and 20 characters long');
+        error.status = 400
+        throw error
     }
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-        res.status(400);
-        throw new Error('User already exists');
+        const error: ErrorWithStatus = new Error('User already exists')
+        error.status = 400
+        throw error
     }
 
-    // Hash password at controller level
     const salt = await bcrypt.genSalt(10);  
     const hashedPassword = await bcrypt.hash(sanitizedPassword, salt);
 
@@ -61,43 +64,71 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        res.status(400);
-        throw new Error('Please provide email and password');
+        const error: ErrorWithStatus = new Error('Please provide email and password');
+        error.status = 400
+        throw error
     }
 
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-        res.status(400);
-        throw new Error('User not found');
+        const error: ErrorWithStatus = new Error('User not found');
+        error.status = 400
+        throw error
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-        res.status(400);
-        throw new Error('Invalid password');
+        const error: ErrorWithStatus = new Error('Invalid password');
+        error.status = 400
+        throw error
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+
+    res.cookie("auth_token", token, {
+        httpOnly: true,   
+        secure: true,     
+        sameSite: "strict", 
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
 
     res.status(200).json({ 
-        token: token,
-        role: user.role 
+        user: {
+            id: user.id,
+            name: user.name,
+            profilePicture: user.profilePicture,
+            role: user.role
+        }
     });
 });
 
-export const getCurrentUser = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const user = await User.findById(req.user?.id);
-    if (!user) {
-        res.status(404);
-        throw new Error('User not found');
-    }
-    res.status(200).json(user);
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const token = req.cookies.auth_token;
+    
+    if (!token) {
+        res.status(401).json({ message: "Not authorized, no token provided" });
+        return;
+      }
+  
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+        const user = await User.findById(decoded.id).select("-password");
+  
+        if (!user) {
+          res.status(401).json({ message: "User not found" });
+          return; 
+        }
+  
+        res.json({ id: user.id, name: user.name, email: user.email });
+      } catch (error) {
+        next(error); 
+      }
 });
 
 export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
-    res.clearCookie('token');
+    res.clearCookie('auth_token');
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
@@ -105,15 +136,17 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.params.id;
     
     if (!userId) {
-        res.status(400);
-        throw new Error('User ID is required');
+        const error: ErrorWithStatus = new Error('User ID is required')
+        error.status = 400
+        throw error
     }
     
     const user = await User.findById(userId);
     
     if (!user) {
-        res.status(404);
-        throw new Error('User not found');
+        const error: ErrorWithStatus = new Error('User not found')
+        error.status = 404
+        throw error
     }
 
     await user.deleteOne();
@@ -125,31 +158,30 @@ export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res
     const { currentPassword, newPassword } = req.body;
     
     if (!currentPassword || !newPassword) {
-        res.status(400);
-        throw new Error('Please provide current password and new password');
+        const error: ErrorWithStatus = new Error('Please provide current password and new password')
+        error.status = 400
+        throw error
     }
     
-    // Include password in the select
     const user = await User.findById(req.user?.id).select('+password');
     
     if (!user) {
-        res.status(404);
-        throw new Error('User not found');
+        const error: ErrorWithStatus = new Error('User not found')
+        error.status = 404
+        throw error
     }
     
-    // Verify current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     
     if (!isPasswordValid) {
-        res.status(400);
-        throw new Error('Current password is incorrect');
+        const error: ErrorWithStatus = new Error('Current password is incorrect')
+        error.status = 400
+        throw error
     }
     
-    // Hash the new password at controller level
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     
-    // Update password
     user.password = hashedPassword;
     await user.save();
     

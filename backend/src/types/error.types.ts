@@ -1,6 +1,6 @@
 export interface ErrorWithStatus extends Error {
-  status?: number;
   code?: string;
+  status?: number;
 }
 
 export interface ApiError {

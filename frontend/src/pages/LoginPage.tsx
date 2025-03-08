@@ -1,40 +1,72 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from "react-hook-form";
+import { LoginForm } from '../types/auth.types';
+import { loginUser } from '../services/apiService';
+import { Bounce, ToastContainer, toast } from 'react-toastify';
+import PulseLoader from "react-spinners/PulseLoader";
 
 interface Props {}
 
 export const LoginPage = (_props: Props) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt with:', { email, password });
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors } 
+  } = useForm<LoginForm>({
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
+
+  const onSubmit = async (data: LoginForm) => {
+    try {
+      setIsLoading(true);
+      const response = await loginUser(data);
+      console.log(response);
+      if (!('error' in response)) {
+        //const user = response.user
+        response.role === 'client'
+        ? navigate('/client-profile')
+        : navigate('/freelancer-profile',)
+      } else {
+        toast.error(response.error.message); 
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred. Please try again.');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  }
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  }
 
   return (
     <div className="flex h-screen">
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
       {/* Left side - Hero Image */}    
-        <div className="w-1/2 h-full">
-          <img 
-            src="/freelance-hero.jpg" 
-            alt="Freelancers collaborating" 
-            className="w-full h-full object-cover shadow-xl"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80";
-            }}
-          />
+      <div className="w-1/2 h-full">
+        <img 
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80" 
+          alt="Freelancers collaborating" 
+          className="w-full h-full object-cover shadow-xl"
+        />
       </div>
 
       {/* Right side - Login Form */}
@@ -45,7 +77,7 @@ export const LoginPage = (_props: Props) => {
             <p className="text-gray-600">Log in to your account</p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-6">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
@@ -53,12 +85,17 @@ export const LoginPage = (_props: Props) => {
               <input
                 id="email"
                 type="email"
-                value={email}
-                onChange={handleEmailChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                className={`w-full px-4 py-3 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-300' : 'border-gray-300 focus:ring-primary-300'} focus:outline-none focus:ring-2 focus:border-transparent`}
                 placeholder="you@example.com"
-                required
+                {...register("email", { 
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address"
+                  }
+                })}
               />
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
 
             <div className="mb-6">
@@ -74,11 +111,19 @@ export const LoginPage = (_props: Props) => {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={handlePasswordChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                  className={`w-full px-4 py-3 rounded-lg border ${errors.password ? 'border-red-500 focus:ring-red-300' : 'border-gray-300 focus:ring-primary-300'} focus:outline-none focus:ring-2 focus:border-transparent`}
                   placeholder="••••••••"
-                  required
+                  {...register("password", { 
+                    required: "Password is required",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters"
+                    },
+                    maxLength: {
+                      value: 20,
+                      message: "Password must be less than 20 characters"
+                    }
+                  })}
                 />
                 <button
                   type="button"
@@ -97,13 +142,22 @@ export const LoginPage = (_props: Props) => {
                   )}
                 </button>
               </div>
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
+              disabled={isLoading}
+              className={`w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Log In
+              {isLoading ? (
+                <PulseLoader
+                color="#ffffff"
+                size={10}
+                />
+              ) : (
+                'Log In'
+              )}
             </button>
           </form>
 

@@ -69,14 +69,6 @@ const userSchema = new mongoose.Schema<IUser>({
 userSchema.index({ createdAt: -1 });
 userSchema.index({ name: 1 });
 
-userSchema.post('save', function(error: any, next: any) {
-    if (error.code === 11000) {
-        next(new Error('Email already exists'));
-    } else {
-        next(error);
-    }
-});
-
 userSchema.pre('findOneAndUpdate', function() {
     this.set({ updatedAt: new Date() });
 });
