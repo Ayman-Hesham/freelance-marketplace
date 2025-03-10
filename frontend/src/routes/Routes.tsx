@@ -4,6 +4,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { LandingPage } from '../pages/LandingPage';
 import { ClientProfile } from '../pages/client/ClientProfile'
 import { FreelancerProfile } from '../pages/freelancer/FreelancerProfile'
+import { ProtectedRoute } from './ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -20,11 +21,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/client-profile",
-    element: <ClientProfile />
+    element: (
+      <ProtectedRoute requiredRole="client">
+        <ClientProfile />
+      </ProtectedRoute>
+    )
   },
   {
     path: "/freelancer-profile",
-    element: <FreelancerProfile />
+    element: (
+      <ProtectedRoute requiredRole="freelancer">
+        <FreelancerProfile />
+      </ProtectedRoute>
+    )
   }
 ]);
 

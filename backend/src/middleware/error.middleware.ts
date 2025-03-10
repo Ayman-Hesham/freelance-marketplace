@@ -14,12 +14,10 @@ export const errorHandler = (
   console.error(`Request body:`, req.body);
   
   res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-      status: err.status || 500,
-      code: err.code,
-      timestamp: new Date().toISOString()
-    }
+    message: err.message || 'Internal Server Error',
+    status: err.status || 500,
+    code: err.code,
+    timestamp: new Date().toISOString()
   });
 };
 

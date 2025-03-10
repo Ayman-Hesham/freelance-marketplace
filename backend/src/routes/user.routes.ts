@@ -4,7 +4,7 @@ import { protect } from '../middleware/auth.middleware'
 
 const router = Router();
 
-router.get('/current', protect, getCurrentUser)
+router.get('/current', getCurrentUser)
 router.post('/', registerUser);
 router.put('/update-password', protect, updatePassword);
 router.delete('/:id',  deleteUser);

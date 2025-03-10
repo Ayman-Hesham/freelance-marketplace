@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
+import { useAuth } from '../context/authContext';
 import { LoginForm } from '../types/auth.types';
-import { loginUser } from '../services/apiService';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
 
@@ -10,8 +10,8 @@ interface Props {}
 
 export const LoginPage = (_props: Props) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { login, user, isLoading, error } = useAuth();
 
   const { 
     register, 
@@ -24,24 +24,27 @@ export const LoginPage = (_props: Props) => {
     }
   });
 
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'client') {
+        navigate('/client-profile');
+      } else {
+        navigate('/freelancer-profile');
+      }
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
   const onSubmit = async (data: LoginForm) => {
     try {
-      setIsLoading(true);
-      const response = await loginUser(data);
-      console.log(response);
-      if (!('error' in response)) {
-        //const user = response.user
-        response.role === 'client'
-        ? navigate('/client-profile')
-        : navigate('/freelancer-profile',)
-      } else {
-        toast.error(response.error.message); 
-      }
-    } catch (error) {
-      toast.error('An unexpected error occurred. Please try again.');
+      await login(data);
+    } catch (error: any) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -60,7 +63,7 @@ export const LoginPage = (_props: Props) => {
         theme="colored"
         transition={Bounce}
       />
-      {/* Left side - Hero Image */}    
+
       <div className="w-1/2 h-full">
         <img 
           src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80" 
@@ -69,7 +72,6 @@ export const LoginPage = (_props: Props) => {
         />
       </div>
 
-      {/* Right side - Login Form */}
       <div className="w-full md:w-1/2 bg-grey flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
           <div className="text-center mb-8">

@@ -5,42 +5,40 @@ export interface RegistrationForm {
     role: 'client' | 'freelancer';
 }
 
-export interface SuccessResponse {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
-  
-export interface ErrorResponse {
-    error: {
-        message: string;
-        status?: number;
-        code?: string;
-        timestamp?: string;
-      }
-}
-
-export type RegisterationResponse = SuccessResponse | ErrorResponse;
-
 export interface LoginForm {
     email: string;
     password: string;
 }
 
-export interface UserProfile {
+export interface SuccessResponse {
+    message: string;
+}
+  
+export interface ErrorResponse {
+    message: string;
+    status?: number;
+    code?: string;
+    timestamp?: string;
+}
+
+export type RegisterResponse = SuccessResponse | ErrorResponse;
+
+
+export interface User {
+    id: string;
     name: string;
-    profilePicture: string;
-    bio: string;
-    portfolio: BufferSource | null;
-}
+    profilePicture?: string;
+    role: 'client' | 'freelancer';
+  }
 
-export interface LoginSuccess {
-    token: string;
-    role: string;
-    user: UserProfile;
-}
+export type LoginResponse = User | ErrorResponse
 
-
-export type LoginResponse = LoginSuccess | ErrorResponse
-
+export interface AuthContextType {
+    user: User | null;
+    isLoading: boolean;
+    error: string | null;
+    login: (loginData: LoginForm) => Promise<void>;
+    register: (userData: RegistrationForm) => Promise<void>;
+    logout: () => Promise<void>;
+    clearError: () => void;
+  }

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
+import { useAuth } from '../context/authContext';
 import { RegistrationForm } from '../types/auth.types';
-import { createUser } from '../services/apiService';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
 
@@ -11,13 +11,8 @@ type Props = {}
 export const RegisterPage = (_props: Props) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [role, setRole] = useState<'client' | 'freelancer'>('client');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  const onRoleChange = (newRole: 'client' | 'freelancer') => {
-    setRole(newRole);
-    setValue("role", newRole)
-  }
+  const { register: registerUser, isLoading, error} = useAuth();
 
   const { 
     register, 
@@ -33,22 +28,25 @@ export const RegisterPage = (_props: Props) => {
     }
   });
 
+  const onRoleChange = (newRole: 'client' | 'freelancer') => {
+    setRole(newRole);
+    setValue("role", newRole)
+  }
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
 
   const onSubmit = async (data: RegistrationForm) => {
     try {
-      setIsLoading(true);
-      const response = await createUser(data);
-      if (!('error' in response)) {
-        toast.success('Account created successfully! Please log in.'); 
-        navigate('/login'); 
-      } else {
-        toast.error(response.error.message); 
-      }
+      await registerUser(data);
+      toast.success('Account created successfully! Please log in.');
+      navigate('/login');
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again.');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error(error)
     }
   };
 
@@ -67,6 +65,7 @@ export const RegisterPage = (_props: Props) => {
         theme="colored"
         transition={Bounce}
       />
+
       <div className="w-1/2 h-full">
         <img
           src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1484&q=80"

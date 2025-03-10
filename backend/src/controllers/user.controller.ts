@@ -51,12 +51,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     });
 
     if (user) {
-        res.status(201).json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-        });
+        res.status(201).json({message: `User created successfully: ${user.name}`});
     }
 });
 
@@ -94,18 +89,17 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
-    res.status(200).json({ 
-        user: {
-            id: user.id,
-            name: user.name,
-            profilePicture: user.profilePicture,
-            role: user.role
-        }
-    });
+      res.status(200).json({
+        id: user.id,
+        name: user.name,
+        profilePicture: user.profilePicture,
+        role: user.role
+      })
 });
 
 export const getCurrentUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.auth_token;
+    console.log(token);
     
     if (!token) {
         res.status(401).json({ message: "Not authorized, no token provided" });
@@ -121,7 +115,12 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response, n
           return; 
         }
   
-        res.json({ id: user.id, name: user.name, email: user.email });
+        res.status(200).json({
+            id: user.id,
+            name: user.name,
+            profilePicture: user.profilePicture,
+            role: user.role
+          })
       } catch (error) {
         next(error); 
       }
