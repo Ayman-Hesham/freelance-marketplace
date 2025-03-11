@@ -83,13 +83,12 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
 
     res.cookie("auth_token", token, {
-        httpOnly: true,   
-        secure: true,     
+        httpOnly: true,      
         sameSite: "strict", 
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
-      res.status(200).json({
+    res.status(200).json({
         id: user.id,
         name: user.name,
         profilePicture: user.profilePicture,

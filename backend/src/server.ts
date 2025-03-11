@@ -6,6 +6,7 @@ import { database } from './configs/database';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser'
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 
 // Mount routes
