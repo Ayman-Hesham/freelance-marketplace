@@ -8,7 +8,7 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -20,6 +20,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -57,17 +58,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegistrationForm) => {
+  const register = async (userData: RegistrationForm): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await createUser(userData);
       if ('status' in response) {
         setError(response.message);
-        return;
+        return response.message;
       }
+      setSuccess(response.message);
+      return null;
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      const errorMessage = err.message || 'Registration failed';
+      setError(errorMessage);
+      return errorMessage;
     } finally {
       setIsLoading(false);
     }
@@ -85,18 +90,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const clearError = () => {
+  const clearToast = () => {
     setError(null);
+    setSuccess(null);
   };
 
   const value: AuthContextType = {
     user,
     isLoading,
     error,
+    success,
     login,
     register,
     logout,
-    clearError
+    clearToast
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

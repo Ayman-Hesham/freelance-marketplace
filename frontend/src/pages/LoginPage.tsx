@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { LoginForm } from '../types/auth.types';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
@@ -11,7 +11,7 @@ interface Props {}
 export const LoginPage = (_props: Props) => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { login, user, isLoading, error } = useAuth();
+  const { login, user, isLoading, error, success, clearToast } = useAuth();
 
   const { 
     register, 
@@ -35,7 +35,14 @@ export const LoginPage = (_props: Props) => {
   }, [user, navigate]);
 
   useEffect(() => {
+    if (success) {
+      toast.success(success);
+    }
+  }, [success]);
+
+  useEffect(() => {
     if (error) {
+      console.log(error)
       toast.error(error);
     }
   }, [error]);
@@ -166,7 +173,7 @@ export const LoginPage = (_props: Props) => {
           <div className="mt-8 text-center">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <Link to="/register" className="text-secondary-500 hover:text-secondary-600 font-medium">
+              <Link to="/register" className="text-secondary-500 hover:text-secondary-600 font-medium" onClick={() => clearToast()}>
                 Create an account
               </Link>
             </p>

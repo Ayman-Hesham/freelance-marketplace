@@ -15,7 +15,6 @@ export const createUser = async (query: RegistrationForm): Promise<RegisterRespo
         return response.data;
     } catch (err) {
         if(axios.isAxiosError(err)){
-            console.log(err.message);
             return {
                 message: err.response?.data?.message || err.message,
                 status: err.response?.status,
@@ -37,7 +36,6 @@ export const loginUser = async (query: LoginForm): Promise<LoginResponse> => {
         return response.data;
     } catch (err) {
         if(axios.isAxiosError(err)){
-            console.log(err.message);
             return {
                 message: err.response?.data?.message || err.message,
                 status: err.response?.status,
@@ -59,7 +57,6 @@ export const getCurrentUser = async (): Promise<LoginResponse> => {
         return response.data;
     } catch (err) {
         if(axios.isAxiosError(err)){
-            console.log(err.message);
             return {
                 message: err.response?.data?.message || err.message,
                 status: err.response?.status,

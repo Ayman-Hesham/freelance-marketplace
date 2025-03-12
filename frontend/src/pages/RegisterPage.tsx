@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { RegistrationForm } from '../types/auth.types';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
@@ -12,7 +12,7 @@ export const RegisterPage = (_props: Props) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [role, setRole] = useState<'client' | 'freelancer'>('client');
   const navigate = useNavigate();
-  const { register: registerUser, isLoading, error} = useAuth();
+  const { register: registerUser, isLoading, error, clearToast} = useAuth();
 
   const { 
     register, 
@@ -41,12 +41,11 @@ export const RegisterPage = (_props: Props) => {
 
 
   const onSubmit = async (data: RegistrationForm) => {
-    try {
-      await registerUser(data);
-      toast.success('Account created successfully! Please log in.');
+    const errorMessage = await registerUser(data);
+    if (!errorMessage) {
       navigate('/login');
-    } catch (error) {
-      console.error(error)
+    } else {
+      console.log(errorMessage);
     }
   };
 
@@ -282,6 +281,7 @@ export const RegisterPage = (_props: Props) => {
               <Link
                 to="/login"
                 className="text-secondary-500 hover:text-secondary-600 font-medium"
+                onClick={() => clearToast()}
               >
                 Log in
               </Link>

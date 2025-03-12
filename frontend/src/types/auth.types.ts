@@ -37,8 +37,9 @@ export interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     error: string | null;
+    success: string | null;
     login: (loginData: LoginForm) => Promise<void>;
-    register: (userData: RegistrationForm) => Promise<void>;
+    register: (userData: RegistrationForm) => Promise<string | null>;
     logout: () => Promise<void>;
-    clearError: () => void;
+    clearToast: () => void;
   }

@@ -51,7 +51,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     });
 
     if (user) {
-        res.status(201).json({message: `User created successfully: ${user.name}`});
+        res.status(201).json({message: `Account created successfully`});
     }
 });
 
