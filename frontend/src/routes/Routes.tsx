@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { LandingPage } from '../pages/LandingPage';
+import { JobsPage } from '../pages/JobsPage';
 import { ClientProfile } from '../pages/client/ClientProfile'
 import { FreelancerProfile } from '../pages/freelancer/FreelancerProfile'
 import { ProtectedRoute } from './ProtectedRoute';
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
         <FreelancerProfile />
       </ProtectedRoute>
     )
+  },
+  {
+    path: "/Jobs",
+    element: <JobsPage />,
   }
 ]);
 
