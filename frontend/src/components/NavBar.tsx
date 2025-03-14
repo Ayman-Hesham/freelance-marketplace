@@ -1,7 +1,14 @@
 import _React from 'react';
 import { Search, FileText, MessageSquare, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
-export function Navbar() {
+
+type Props = {}
+
+export const Navbar = (_props: Props) => {
+ const {user} = useAuth();
+
   return (
     <nav className="bg-primary-500 py-3">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-8 px-6">
@@ -20,17 +27,47 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-8 mx-4">
-          <button className="text-white hover:text-secondary-500 transition">
-            <FileText className="w-6 h-6" />
-          </button>
-          <button className="text-white hover:text-secondary-500 transition">
-            <MessageSquare className="w-6 h-6" />
-          </button>
-          <button className="text-white hover:text-secondary-500 transition">
-            <User className="w-6 h-6" />
-          </button>
-        </div>
+          {user?.role === 'client' ? (
+            <div className="flex items-center gap-8 mx-4">
+              <Link to='/'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <FileText className="w-6 h-6" />
+                </button>
+              </Link>
+
+              <Link to='/'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <MessageSquare className="w-6 h-6" />
+                </button>
+              </Link>
+
+              <Link to='/client-profile'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <User className="w-6 h-6" />
+                </button>
+              </Link>
+            </div>
+          ):(
+            <div className="flex items-center gap-8 mx-4">
+              <Link to='/'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <FileText className="w-6 h-6" />
+                </button>
+              </Link>
+
+              <Link to='/'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <MessageSquare className="w-6 h-6" />
+                </button>
+              </Link>
+
+              <Link to='/freelancer-profile'>
+                <button className="text-white hover:text-secondary-500 transition">
+                  <User className="w-6 h-6" />
+                </button>
+              </Link>
+            </div>
+          )}
       </div>
     </nav>
   );

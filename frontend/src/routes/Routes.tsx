@@ -38,7 +38,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/Jobs",
-    element: <JobsPage />,
+    element: (
+      <ProtectedRoute>
+        <JobsPage />
+      </ProtectedRoute>
+    )
   }
 ]);
 

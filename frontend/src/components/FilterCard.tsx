@@ -1,7 +1,9 @@
 import _React, { useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
 
-export function FilterCard() {
+type Props = {}
+
+export const FilterCard = (_props: Props) => {
   const [deliveryTime, setDeliveryTime] = useState([15]);
   const [budget, setBudget] = useState([500]);
 

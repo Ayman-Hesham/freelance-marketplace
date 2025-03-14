@@ -3,7 +3,9 @@ import { FilterCard } from '../components/FilterCard';
 import { JobsList } from '../components/JobsList';
 import { Navbar } from '../components/NavBar';
 
-export function JobsPage() {
+type Props = {}
+
+export const JobsPage = (_props: Props) => {
 
   return (
     <>

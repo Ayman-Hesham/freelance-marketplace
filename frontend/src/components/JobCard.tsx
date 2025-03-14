@@ -8,7 +8,7 @@ interface JobCardProps {
   budget: number;
 }
 
-export function JobCard({ title, posterName, deliveryTime, budget }: JobCardProps) {
+export const JobCard = ({ title, posterName, deliveryTime, budget }: JobCardProps) => {
   return (
     <div className="bg-grey rounded-lg shadow-md p-4">
       <div className="flex gap-4">

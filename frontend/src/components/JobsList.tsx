@@ -1,6 +1,8 @@
 import _React, { useState } from 'react';
 import { JobCard } from '../components/JobCard';
 
+type Props = {}
+
 const SAMPLE_JOBS = [
   {
     id: 1,
@@ -53,7 +55,7 @@ const SAMPLE_JOBS = [
   }
 ];
 
-export function JobsList() {
+export const JobsList = (_props: Props) => {
   const [jobs] = useState(SAMPLE_JOBS);
 
   return (
