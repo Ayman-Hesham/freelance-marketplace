@@ -152,37 +152,9 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json({ message: 'User deleted successfully' });
 });
 
-export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { currentPassword, newPassword } = req.body;
+
+export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { name, profilePicture, bio, portfolio } = req.body;
     
-    if (!currentPassword || !newPassword) {
-        const error: ErrorWithStatus = new Error('Please provide current password and new password')
-        error.status = 400
-        throw error
-    }
-    
-    const user = await User.findById(req.user?.id).select('+password');
-    
-    if (!user) {
-        const error: ErrorWithStatus = new Error('User not found')
-        error.status = 404
-        throw error
-    }
-    
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-    
-    if (!isPasswordValid) {
-        const error: ErrorWithStatus = new Error('Current password is incorrect')
-        error.status = 400
-        throw error
-    }
-    
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    
-    user.password = hashedPassword;
-    await user.save();
-    
-    res.status(200).json({ message: 'Password updated successfully' });
 });
 

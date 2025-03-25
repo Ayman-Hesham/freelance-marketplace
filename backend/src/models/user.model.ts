@@ -1,22 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-
-interface IUser extends mongoose.Document {
-    name: string;
-    email: string;
-    password: string;
-    role: string;
-    profilePicture?: string;
-    bio?: string;
-    portfolio?: Buffer;
-}
+import { IUser } from '../types/model.types';
 
 const userSchema = new mongoose.Schema<IUser>({
     name: {
         type: String,
         required: true,
-        minlength: [3, 'Name must be at least 3 characters long'],
-        maxlength: [15, 'Name must be less than 15 characters'],
     },
     email: {
         type: String,
@@ -49,7 +38,7 @@ const userSchema = new mongoose.Schema<IUser>({
         type: String,
         default: null,
     },
-    portfolio: {
+    portfolioFile: {
         type: Buffer,
         default: null,
     },
