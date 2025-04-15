@@ -30,11 +30,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/freelancer-profile",
-    element: (
-      <ProtectedRoute requiredRole="freelancer">
-        <FreelancerProfile />
-      </ProtectedRoute>
-    )
+    element: <FreelancerProfile />
   },
   {
     path: "/Jobs",

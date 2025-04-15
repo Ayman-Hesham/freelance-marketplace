@@ -1,21 +1,25 @@
 import _React from 'react';
-import { User } from 'lucide-react';
+import { Avatar } from './Avatar';
 
 interface JobCardProps {
   title: string;
   posterName: string;
   deliveryTime: number;
   budget: number;
+  posterProfilePicture: string;
 }
 
-export const JobCard = ({ title, posterName, deliveryTime, budget }: JobCardProps) => {
+export const JobCard = ({ title, posterName, deliveryTime, budget, posterProfilePicture }: JobCardProps) => {
   return (
     <div className="bg-grey rounded-lg shadow-md p-4">
       <div className="flex gap-4">
         <div className="flex flex-col items-center">
-          <div className="bg-gray-200 rounded-full p-3 mb-2">
-            <User className="w-6 h-6 text-gray-500" />
-          </div>
+          <Avatar 
+            src={posterProfilePicture}
+            fallbackText={posterName.split(' ').map(n => n[0]).join('')}
+            alt={posterName}
+            className="mb-2"
+          />
           <span className="text-sm text-gray-600">{posterName}</span>
         </div>
         <div className="flex-1 pl-4 border-l border-gray-200">

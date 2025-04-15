@@ -23,15 +23,24 @@ export interface ErrorResponse {
 
 export type RegisterResponse = SuccessResponse | ErrorResponse;
 
+export type LoginResponse = User | ErrorResponse
 
 export interface User {
     id: string;
     name: string;
     profilePicture?: string;
+    bio?: string;
+    portfolio?: Buffer;
     role: 'client' | 'freelancer';
-  }
+}
 
-export type LoginResponse = User | ErrorResponse
+export interface AvatarProps {
+    src?: string;
+    alt?: string;
+    fallbackText?: string;
+    className?: string;
+    size?: 'default' | 'large';
+}
 
 export interface AuthContextType {
     user: User | null;
@@ -42,4 +51,5 @@ export interface AuthContextType {
     register: (userData: RegistrationForm) => Promise<string | null>;
     logout: () => Promise<void>;
     clearToast: () => void;
-  }
+}
+
