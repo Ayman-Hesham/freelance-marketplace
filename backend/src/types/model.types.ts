@@ -5,9 +5,9 @@ export interface IUser extends mongoose.Document {
     email: string;
     password: string;
     role: string;
-    profilePicture?: string;
-    bio?: string;
-    portfolioFile?: Buffer;
+    avatar?: string | null;
+    bio?: string | null;
+    portfolio?: string | null;
 }
 
 export interface IJob extends mongoose.Document {
@@ -26,7 +26,7 @@ export interface IApplication extends mongoose.Document {
     jobId: mongoose.Types.ObjectId | IJob;
     freelancerId: mongoose.Types.ObjectId | IUser;
     coverLetter: string;
-    portfolioFile: Buffer;
+    portfolio: string;
     status: string;
     deliveredWork?: Buffer;
     deliveryMessage?: string;

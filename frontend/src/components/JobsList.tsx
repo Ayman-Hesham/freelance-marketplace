@@ -1,7 +1,7 @@
 import _React, { useState } from 'react';
 import { JobCard } from '../components/JobCard';
 
-type Props = {}
+interface Props {}
 
 const SAMPLE_JOBS = [
   {
@@ -60,7 +60,7 @@ export const JobsList = (_props: Props) => {
 
   return (
     <>  
-        { jobs ? (
+        { jobs.length > 0 ? (
             jobs.map((job) => (
                 <div className="mb-4">
                     <JobCard key={job.id} {...job} />

@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema<IUser>({
         enum: ['client', 'freelancer'],
         default: 'client',
     },
-    profilePicture: {
+    avatar: {
         type: String,
         default: null,
     },
@@ -38,10 +38,10 @@ const userSchema = new mongoose.Schema<IUser>({
         type: String,
         default: null,
     },
-    portfolioFile: {
-        type: Buffer,
-        default: null,
-    },
+    portfolio: {
+        type: String,
+        default: null
+    }
 }, {
     timestamps: true,
     versionKey: false,

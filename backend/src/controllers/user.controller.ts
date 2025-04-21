@@ -1,12 +1,25 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
-import { AuthenticatedRequest } from '../types/request.types';
 import { ErrorWithStatus } from '../types/error.types';
+import { uploadToS3, deleteFromS3, getSignedDownloadUrl } from '../services/s3.service';
+import { v4 as uuidv4 } from 'uuid';
+import multer from 'multer';
+import '../types/request.types';
 
 require('dotenv').config();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 16 * 1024 * 1024, 
+  }
+}).fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'portfolio', maxCount: 1 }
+]);
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { name, email, password, role } = req.body;
@@ -91,38 +104,34 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json({
         id: user.id,
         name: user.name,
-        profilePicture: user.profilePicture,
+        avatar: user.avatar,
+        bio: user.bio,
+        portfolio: user.portfolio,
         role: user.role
       })
 });
 
-export const getCurrentUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.auth_token;
-    console.log(token);
-    
-    if (!token) {
-        res.status(401).json({ message: "Not authorized, no token provided" });
-        return;
-      }
-  
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-        const user = await User.findById(decoded.id).select("-password");
-  
-        if (!user) {
-          res.status(401).json({ message: "User not found" });
-          return; 
-        }
-  
-        res.status(200).json({
-            id: user.id,
-            name: user.name,
-            profilePicture: user.profilePicture,
-            role: user.role
-          })
-      } catch (error) {
-        next(error); 
-      }
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?.id) {
+    res.status(401).json({ message: "Not authorized" });
+    return;
+  }
+
+  const user = await User.findById(req.user.id).select("-password");
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return; 
+  }
+
+  res.status(200).json({
+    id: user.id,
+    name: user.name,
+    avatar: user.avatar,
+    bio: user.bio,
+    portfolio: user.portfolio,
+    role: user.role
+  });
 });
 
 export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
@@ -131,7 +140,9 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.params.id;
+    // Only admin or the user themselves should be able to delete a user
+    // For user deleting their own account, we can use req.user.id
+    const userId = req.params.id || req.user?.id;
     
     if (!userId) {
         const error: ErrorWithStatus = new Error('User ID is required')
@@ -152,9 +163,136 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json({ message: 'User deleted successfully' });
 });
 
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  // Wrap the multer middleware
+  const handleMulterUpload = () => {
+    return new Promise((resolve, reject) => {
+      upload(req, res, (err) => {
+        if (err) reject(err);
+        resolve(true);
+      });
+    });
+  };
 
-export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { name, profilePicture, bio, portfolio } = req.body;
+  // Process the multipart form data
+  await handleMulterUpload();
+
+  // Debug logs
+  console.log('Request body:', req.body);
+  console.log('Files:', req.files);
+  
+  const { name, bio } = req.body;
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+  const avatarFile = files?.avatar?.[0];
+  const portfolioFile = files?.portfolio?.[0];
+  const isAvatarDeleted = req.body.avatar === 'null';
+  const isPortfolioDeleted = req.body.portfolio === 'null';
+  
+  // More debug logs
+  console.log('Parsed values:', {
+    name,
+    bio,
+    avatarFile: avatarFile?.originalname,
+    portfolioFile: portfolioFile?.originalname,
+    isAvatarDeleted,
+    isPortfolioDeleted
+  });
+
+  const user = await User.findById(req.user?.id);
+  if (!user) {
+    const error: ErrorWithStatus = new Error('User not found');
+    error.status = 404;
+    throw error;
+  }
+
+  // Handle name update
+  if (name !== undefined && name !== null) {
+    const sanitizedName = name.trim();
+    if (sanitizedName.length < 3 || sanitizedName.length > 15) {
+      const error: ErrorWithStatus = new Error('Name must be between 3 and 15 characters');
+      error.status = 400;
+      throw error;
+    }
+    user.name = sanitizedName;
+  }
+
+  // Handle bio update
+  if (bio !== undefined) {
+    if (bio === null) {
+      user.bio = null;
+    } else {
+      if (bio.length > 500) {
+        const error: ErrorWithStatus = new Error('Bio must be less than 500 characters');
+        error.status = 400;
+        throw error;
+      }
+      user.bio = bio.trim();
+    }
+  }
+
+  // Handle avatar update or deletion
+  if (avatarFile || isAvatarDeleted) {
+    if (user.avatar) {
+      await deleteFromS3(user.avatar);
+    }
     
+    if (avatarFile) {
+      const key = `avatars/${req.user?.id}/${uuidv4()}__${avatarFile.originalname}`;
+      await uploadToS3(avatarFile.buffer, key, avatarFile.mimetype);
+      user.avatar = key;
+    } else {
+      user.avatar = null;
+    }
+  }
+
+  // Handle portfolio update or deletion
+  if (portfolioFile || isPortfolioDeleted) {
+    if (user.portfolio) {
+      await deleteFromS3(user.portfolio);
+    }
+    
+    if (portfolioFile) {
+      const key = `portfolios/${req.user?.id}/${uuidv4()}__${portfolioFile.originalname}`;
+      await uploadToS3(portfolioFile.buffer, key, portfolioFile.mimetype);
+      user.portfolio = key;
+    } else {
+      user.portfolio = null;
+    }
+  }
+
+  await user.save();
+  
+  // Log the final user state before sending response
+  console.log('Updated user:', {
+    id: user.id,
+    name: user.name,
+    avatar: user.avatar,
+    bio: user.bio,
+    portfolio: user.portfolio
+  });
+
+  res.status(200).json({
+    id: user.id,
+    name: user.name,
+    avatar: user.avatar,
+    bio: user.bio,
+    portfolio: user.portfolio
+  });
+});
+
+export const getFileDownloadUrl = asyncHandler(async (req: Request, res: Response) => {
+  const key = req.params.key;
+  
+  if (!key) {
+    const error: ErrorWithStatus = new Error('File key is required');
+    error.status = 400;
+    throw error;
+  }
+
+  const signedUrl = await getSignedDownloadUrl(key);
+  res.status(200).json({
+    downloadUrl: signedUrl,
+    filename: key.split('__').pop()
+  });
 });
 

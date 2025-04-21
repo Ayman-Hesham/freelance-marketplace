@@ -2,6 +2,7 @@ import _React from 'react';
 import { Search, FileText, MessageSquare, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { Tooltip } from 'react-tooltip';
 
 
 type Props = {}
@@ -12,9 +13,11 @@ export const Navbar = (_props: Props) => {
   return (
     <nav className="bg-primary-500 py-3">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-8 px-6">
-        <span className="text-secondary-500 text-xl font-semibold whitespace-nowrap mx-4">
-          Freelance Marketplace
-        </span>
+        <Link to='/jobs' data-tooltip-id="tooltip" data-tooltip-content="Jobs list">
+          <span className="text-secondary-500 text-xl font-semibold whitespace-nowrap mx-4">
+            Freelance Marketplace
+          </span>
+        </Link>
         
         <div className="flex-1 max-w-2xl mx-4">
           <div className="relative">
@@ -29,19 +32,19 @@ export const Navbar = (_props: Props) => {
 
           {user?.role === 'client' ? (
             <div className="flex items-center gap-8 mx-4">
-              <Link to='/'>
+              <Link to='/my-jobs' data-tooltip-id="tooltip" data-tooltip-content="My Jobs">
                 <button className="text-white hover:text-secondary-500 transition">
                   <FileText className="w-6 h-6" />
                 </button>
               </Link>
 
-              <Link to='/'>
+              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="Messages">
                 <button className="text-white hover:text-secondary-500 transition">
                   <MessageSquare className="w-6 h-6" />
                 </button>
               </Link>
 
-              <Link to='/client-profile'>
+              <Link to='/client-profile' data-tooltip-id="tooltip" data-tooltip-content="Profile">
                 <button className="text-white hover:text-secondary-500 transition">
                   <User className="w-6 h-6" />
                 </button>
@@ -49,19 +52,19 @@ export const Navbar = (_props: Props) => {
             </div>
           ):(
             <div className="flex items-center gap-8 mx-4">
-              <Link to='/'>
+              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="My Applications">
                 <button className="text-white hover:text-secondary-500 transition">
                   <FileText className="w-6 h-6" />
                 </button>
               </Link>
 
-              <Link to='/'>
+              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="Messages">
                 <button className="text-white hover:text-secondary-500 transition">
                   <MessageSquare className="w-6 h-6" />
                 </button>
               </Link>
 
-              <Link to='/freelancer-profile'>
+              <Link to='/freelancer-profile' data-tooltip-id="tooltip" data-tooltip-content="Profile">
                 <button className="text-white hover:text-secondary-500 transition">
                   <User className="w-6 h-6" />
                 </button>
@@ -69,6 +72,7 @@ export const Navbar = (_props: Props) => {
             </div>
           )}
       </div>
+      <Tooltip id="tooltip" place="bottom" />
     </nav>
   );
 }

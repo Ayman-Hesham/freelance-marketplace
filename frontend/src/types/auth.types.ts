@@ -28,10 +28,10 @@ export type LoginResponse = User | ErrorResponse
 export interface User {
     id: string;
     name: string;
-    profilePicture?: string;
+    avatar?: string;
     bio?: string;
-    portfolio?: Buffer;
-    role: 'client' | 'freelancer';
+    portfolio?: string;
+    role?: 'client' | 'freelancer';
 }
 
 export interface AvatarProps {
@@ -42,14 +42,5 @@ export interface AvatarProps {
     size?: 'default' | 'large';
 }
 
-export interface AuthContextType {
-    user: User | null;
-    isLoading: boolean;
-    error: string | null;
-    success: string | null;
-    login: (loginData: LoginForm) => Promise<void>;
-    register: (userData: RegistrationForm) => Promise<string | null>;
-    logout: () => Promise<void>;
-    clearToast: () => void;
-}
+
 

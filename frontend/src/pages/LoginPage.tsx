@@ -112,9 +112,6 @@ export const LoginPage = (_props: Props) => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <a href="#" className="text-sm text-secondary-500 hover:text-secondary-600">
-                  Forgot password?
-                </a>
               </div>
               <div className="relative">
                 <input

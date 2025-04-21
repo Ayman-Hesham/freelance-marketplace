@@ -1,76 +1,82 @@
-import _React, { useState } from 'react';
-import { Navbar } from '../../components/NavBar';
+import _React, { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../context/AuthContext';
-import { EditProfileModal, ProfileFormData } from '../../components/profile/EditProfileModal';
+import { EditProfileModal } from '../../components/EditProfileModal';
+import { getFileDownloadUrl } from '../../services/UserService';
+import { Bounce, ToastContainer, toast } from 'react-toastify';
+import PulseLoader from 'react-spinners/PulseLoader';
 
-type Props = {}
 
-export const FreelancerProfile = (_props: Props) => {
-  const { user, logout } = useAuth();
+export const FreelancerProfile = () => {
+  const { user, logout, isLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [bio, setBio] = useState(user?.bio || 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.');
-  const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture);
-  const [hasPortfolio, setHasPortfolio] = useState<boolean>(!!user?.portfolio);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   
+  useEffect(() => {
+    async function loadAvatarUrl() {
+      if (user?.avatar) {
+          try {
+            const response = await getFileDownloadUrl(user.avatar);
+            if ('downloadUrl' in response) {
+              setAvatarUrl(response.downloadUrl);
+            }
+          } catch (error) {
+            console.error('Failed to load avatar URL:', error);
+            setAvatarUrl(undefined);
+          }
+      }
+    }
+    loadAvatarUrl();
+  }, [user?.avatar]);
+
   const handleEditClick = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback((wasUpdated = false) => {
     setIsEditModalOpen(false);
-  };
+    if (wasUpdated) {
+      setTimeout(() => {
+        toast.success('Profile updated successfully');
+      }, 100);
+    }
+  }, []);
 
-  const handleUpdateProfile = (data: ProfileFormData) => {
-    console.log('Update profile with data:', data);
-    
-    // Update local state with new values
-    if (data.name) {
-      // This would need API integration to fully update the user object
-      console.log('New name:', data.name);
-    }
-    
-    setBio(data.bio);
-    
-    if (data.avatar !== undefined) {
-      if (data.avatar === null) {
-        // User deleted their avatar
-        setAvatarUrl(undefined);
-      } else {
-        // Handle file upload first (with API) then update UI
-        // For now, we're just simulating a URL for the new image
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === 'string') {
-            setAvatarUrl(reader.result);
-          }
-        };
-        reader.readAsDataURL(data.avatar);
+  const handlePortfolioDownload = async () => {
+    try {
+      const response = await getFileDownloadUrl(user?.portfolio || '');
+      if (!('downloadUrl' in response)) {
+        throw new Error('Invalid response format');
       }
+
+      window.open(response.downloadUrl, '_blank');
+    } catch (error) {
+      alert('Failed to open portfolio');
+      console.error('Portfolio error:', error);
     }
-    
-    if (data.portfolio !== undefined) {
-      // Update portfolio status
-      setHasPortfolio(data.portfolio !== null);
-      
-      if (data.portfolio) {
-        // Handle portfolio file upload (with API)
-        console.log('New portfolio file:', data.portfolio.name);
-      }
-    }
-    
-    handleCloseModal();
   };
 
   return (
     <>
-      <Navbar />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
       <div className="mt-24 p-4 flex justify-center">
-        <div className="bg-gray-200 rounded-lg p-8 w-full max-w-4xl">
+        <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">
           {/* Profile Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Profile</h1>
+            <h1 className="text-2xl font-bold text-primary-500">Profile</h1>
             <button 
               className="flex items-center text-blue-600"
               onClick={handleEditClick}
@@ -98,36 +104,23 @@ export const FreelancerProfile = (_props: Props) => {
           {/* Bio Section */}
           <div className="mb-6">
             <h2 className="font-medium mb-2 text-gray-700">Bio</h2>
-            <div className="bg-white p-4 rounded-md">
-              <p className="text-gray-800">{bio}</p>
+            <div className="border border-gray-300 p-4 rounded-md">
+              <p className="text-gray-800">{user?.bio}</p>
             </div>
           </div>
 
           {/* Portfolio Section */}
-          <div className="mb-6">
+          <div className="mb-12">
             <h2 className="font-medium mb-2 text-gray-700">Portfolio</h2>
-            <div className="bg-white p-4 rounded-md">
-              {hasPortfolio ? (
+            <div className="border border-gray-300 p-4 rounded-md">
+              {user?.portfolio ? (
                 <div className="flex items-center">
-                  <span className="text-gray-700 mr-2">Portfolio:</span>
-                  <a 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // Replace this with actual download logic when integrated with backend
-                      console.log('Downloading portfolio file');
-                      // Example download implementation (when API is ready):
-                      // const link = document.createElement('a');
-                      // link.href = URL_TO_PORTFOLIO_FILE;
-                      // link.download = 'project-documentation.pdf';
-                      // document.body.appendChild(link);
-                      // link.click();
-                      // document.body.removeChild(link);
-                    }}
+                  <button 
+                    onClick={handlePortfolioDownload}
                     className="text-blue-600 hover:text-blue-800 hover:underline"
                   >
-                    project-documentation.pdf
-                  </a>
+                    {user.portfolio.split('__').pop()}
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
@@ -139,11 +132,19 @@ export const FreelancerProfile = (_props: Props) => {
 
           {/* Logout Button */}
           <div className="border-t border-gray-300 pt-6">
-            <button 
-              className="mx-auto block bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors"
+          <button 
+              className="mx-auto block bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               onClick={logout}
+              disabled={isLoading}
             >
-              Logout
+              {isLoading ? (
+                <PulseLoader
+                  color="#ffffff"
+                  size={10}
+                />
+              ) : (
+                'Logout'
+              )}
             </button>
           </div>
         </div>
@@ -154,7 +155,8 @@ export const FreelancerProfile = (_props: Props) => {
         <EditProfileModal 
           user={user}
           onClose={handleCloseModal}
-          onSubmit={handleUpdateProfile}
+          initialAvatarUrl={avatarUrl}
+          userRole="freelancer"
         />
       )}
     </>

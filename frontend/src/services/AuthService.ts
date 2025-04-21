@@ -72,19 +72,3 @@ export const getCurrentUser = async (): Promise<LoginResponse> => {
     }
 }
 
-export const logoutUser = async (): Promise<{success?: boolean, message?: string}> => {
-    try {
-        await apiClient.post('/auth/logout');
-        return { success: true };
-    } catch (err) {
-        if (axios.isAxiosError(err)) {
-            return {
-                message: err.response?.data?.message || err.message
-            };
-        } else {
-            return {
-                message: "Unexpected error"
-            };
-        }
-    }
-};

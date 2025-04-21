@@ -1,13 +1,26 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes/Routes';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { PulseLoader } from 'react-spinners';
 
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <AuthInit>
+        <RouterProvider router={router} />
+      </AuthInit>
     </AuthProvider>
   );
+}
+
+function AuthInit({ children }: { children: React.ReactNode }) {
+  const { isInitialized } = useAuth();
+  
+  if (!isInitialized) {
+    return <PulseLoader color="#36d7b7" />;
+  }
+
+  return <>{children}</>;
 }
 
 export default App;

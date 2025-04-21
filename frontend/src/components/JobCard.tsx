@@ -6,16 +6,16 @@ interface JobCardProps {
   posterName: string;
   deliveryTime: number;
   budget: number;
-  posterProfilePicture: string;
+  posterAvatar?: string;
 }
 
-export const JobCard = ({ title, posterName, deliveryTime, budget, posterProfilePicture }: JobCardProps) => {
+export const JobCard = ({ title, posterName, deliveryTime, budget, posterAvatar }: JobCardProps) => {
   return (
     <div className="bg-grey rounded-lg shadow-md p-4">
       <div className="flex gap-4">
         <div className="flex flex-col items-center">
           <Avatar 
-            src={posterProfilePicture}
+            src={posterAvatar}
             fallbackText={posterName.split(' ').map(n => n[0]).join('')}
             alt={posterName}
             className="mb-2"

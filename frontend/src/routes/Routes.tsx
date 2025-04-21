@@ -6,6 +6,8 @@ import { JobsPage } from '../pages/JobsPage';
 import { ClientProfile } from '../pages/client/ClientProfile'
 import { FreelancerProfile } from '../pages/freelancer/FreelancerProfile'
 import { ProtectedRoute } from './ProtectedRoute';
+import { Layout } from '../pages/Layout';
+import { ClientJobs } from '../pages/client/clientJobs';
 
 export const router = createBrowserRouter([
   {
@@ -24,19 +26,39 @@ export const router = createBrowserRouter([
     path: "/client-profile",
     element: (
       <ProtectedRoute requiredRole="client">
-        <ClientProfile />
+        <Layout>
+          <ClientProfile />
+        </Layout>
       </ProtectedRoute>
     )
   },
   {
     path: "/freelancer-profile",
-    element: <FreelancerProfile />
+    element: (
+      <ProtectedRoute requiredRole="freelancer">
+        <Layout>
+          <FreelancerProfile />
+        </Layout>
+      </ProtectedRoute>
+    )
   },
   {
-    path: "/Jobs",
+    path: "/my-jobs",
+    element: (
+      <ProtectedRoute requiredRole="client">
+        <Layout>
+          <ClientJobs />
+        </Layout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/jobs",
     element: (
       <ProtectedRoute>
-        <JobsPage />
+        <Layout>
+          <JobsPage />
+        </Layout>
       </ProtectedRoute>
     )
   }
