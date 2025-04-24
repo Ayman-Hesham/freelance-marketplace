@@ -1,6 +1,4 @@
 import { Request } from 'express';
-import { Multer } from 'multer';
-import { IUser } from './model.types';
 
 interface User {
   id: string;
@@ -21,7 +19,7 @@ export interface UpdateProfileRequest extends Request {
   body: {
     name?: string;
     bio?: string;
-    avatar?: string; // For handling deletion ('null' string)
-    portfolio?: string; // For handling deletion ('null' string)
+    avatar?: string; 
+    portfolio?: string;
   };
 }

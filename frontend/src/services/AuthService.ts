@@ -51,24 +51,4 @@ export const loginUser = async (query: LoginForm): Promise<LoginResponse> => {
     }
 }
 
-export const getCurrentUser = async (): Promise<LoginResponse> => {
-    try{
-        const response = await apiClient.get('/users/current');
-        return response.data;
-    } catch (err) {
-        if(axios.isAxiosError(err)){
-            return {
-                message: err.response?.data?.message || err.message,
-                status: err.response?.status,
-                code: err.code,
-                timestamp: new Date().toISOString()
-            }
-        } else {
-            console.log("Unexpected error ", err)
-            return {
-                message: "Unexpected error"
-            }
-        }
-    }
-}
 

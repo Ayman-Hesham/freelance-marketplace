@@ -1,6 +1,5 @@
 import _React from 'react';
-import { Search, Clock, Shield, Users } from 'lucide-react';
-import { Button } from '../components/Button';
+import { Search, Clock, Shield, Users, ArrowRight } from 'lucide-react';
 import { FeatureCard } from '../components/FeatureCard';
 import { Link } from 'react-router-dom';
 
@@ -39,10 +38,16 @@ export const LandingPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/login">
-                  <Button variant="primary">Hire Talent</Button>
+                  <button className="px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 group bg-primary-500 text-white hover:bg-primary-600">
+                    Hire Talent
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </Link>
                 <Link to="/login">
-                  <Button variant="secondary">Find Work</Button>
+                  <button className="px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 group bg-secondary-500 text-white hover:bg-secondary-600">
+                    Find Work
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </Link>
               </div>
             </div>

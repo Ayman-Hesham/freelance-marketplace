@@ -4,7 +4,6 @@ import { ErrorWithStatus } from '../types/error.types';
 
 export const protect = (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Get token from cookies or headers
     const token = req.cookies.auth_token || 
                   (req.headers.authorization?.startsWith('Bearer') ? 
                     req.headers.authorization.split(' ')[1] : null);
@@ -15,10 +14,8 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
       throw error;
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
     
-    // Add user data to request - now we can access it directly
     req.user = {
       id: decoded.id
     };

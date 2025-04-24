@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerUser, loginUser, logoutUser, deleteUser, getCurrentUser, updateProfile, getFileDownloadUrl } from '../controllers/user.controller';
+import { registerUser, loginUser, logoutUser, deleteUser, getCurrentUser, updateProfile } from '../controllers/user.controller';
 import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -10,7 +10,6 @@ router.post('/login', loginUser);
 router.get('/current', protect, getCurrentUser);
 router.post('/logout', protect, logoutUser);
 router.put('/update-profile', protect, updateProfile);
-router.get('/file/:key', protect, getFileDownloadUrl);
 router.delete('/:id', protect, deleteUser);
 
 export const userRouter = router;

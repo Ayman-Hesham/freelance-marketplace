@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createUser, getCurrentUser, loginUser } from '../services/AuthService';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createUser, loginUser } from '../services/AuthService';
 import { updateProfile, logoutUser } from '../services/UserService';
 import { RegistrationForm, LoginForm, User } from '../types/auth.types';
 
@@ -10,7 +10,6 @@ interface AuthProviderProps {
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  isInitialized: boolean;
   error: string | null;
   success: string | null;
   login: (loginData: LoginForm) => Promise<void>;
@@ -32,30 +31,9 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const response = await getCurrentUser();    
-        if ('message' in response) {
-          console.log('Not authenticated or server error');
-          return;
-        }   
-        setUser(response);
-      } catch (err) {
-        console.log('Not authenticated or server error');
-      } finally {
-        setIsLoading(false);
-        setIsInitialized(true);
-      }
-    };
-
-    checkLoginStatus();
-  }, []);
 
   const login = async (loginData: LoginForm) => {
     setIsLoading(true);
@@ -138,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     isLoading,
-    isInitialized,
     error,
     success,
     login,

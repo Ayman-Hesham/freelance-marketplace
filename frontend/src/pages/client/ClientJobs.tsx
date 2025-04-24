@@ -1,10 +1,91 @@
-import React from 'react'
+import { useState, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getJobsByClientId } from '../../services/JobService'
+import { toast, ToastContainer } from 'react-toastify'
+import { Bounce } from 'react-toastify'
+import { Plus } from 'lucide-react'
+import { CreateJobModal } from '../../components/CreateJobModal'
+import { JobsList } from '../../components/JobsList'
+import { useAuth } from '../../context/AuthContext'
+import { GetJobsResponse, JobResponse } from '../../types/job.types'
+import { PulseLoader } from 'react-spinners'
 
-interface Props {}
+export const ClientJobs = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-export const ClientJobs = (_props: Props) => {
+  const { data: jobsData, isLoading } = useQuery({
+    queryKey: ['clientJobs', user?.id],
+    queryFn: () => getJobsByClientId(user?.id || ''),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  })
+
+  const handleCloseModal = useCallback((wasCreated = false) => {
+    setIsModalOpen(false)
+    if (wasCreated) {
+      queryClient.invalidateQueries({ queryKey: ['clientJobs'] })
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      setTimeout(() => {
+        toast.success('Job created successfully')
+      }, 100)
+    }
+  }, [queryClient])
+
+  const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
+    return 'jobs' in data;
+  }
+
+  if (isLoading) return (
+    <div className="h-screen flex items-center justify-center">
+      <PulseLoader color="#36d7b7"/>
+    </div>
+  );
+
   return (
-    <div>clientJobs</div>
+    <>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
+
+      <div className="mt-6 p-4 flex justify-center">
+        <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">
+          <div className="flex justify-between items-center mb-6 px-2">
+            <h1 className="text-2xl font-bold text-primary-500">My Job Postings</h1>
+            <button 
+              className="flex items-center text-blue-600"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus className="h-5 w-5 mr-1" />
+              Create Job
+            </button>
+          </div>
+
+          <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
+            {jobsData && isJobResponse(jobsData) ? (
+              <JobsList jobs={jobsData.jobs} clientId={user?.id} />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No jobs posted yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isModalOpen && <CreateJobModal onClose={handleCloseModal} />}
+    </>
   )
 }
 

@@ -10,19 +10,18 @@ import { PulseLoader } from 'react-spinners';
 interface EditProfileModalProps {
   user: User | null;
   onClose: (wasUpdated?: boolean) => void;
-  initialAvatarUrl?: string;
   userRole: 'client' | 'freelancer';
 }
 
-export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: EditProfileModalProps) {
+export function EditProfileModal({ user, onClose, userRole }: EditProfileModalProps) {
   const { updateUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const portfolioInputRef = useRef<HTMLInputElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(initialAvatarUrl || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
   const [portfolioFileName, setPortfolioFileName] = useState<string | null>(
-    user?.portfolio ? user.portfolio.split('__').pop() || null : null
+    user?.portfolio ? decodeURIComponent(user.portfolio.split('__').pop()?.split('?')[0] || '') : null
   );
 
   const { register, handleSubmit, formState: { errors } } = useForm<ProfileFormData>({
@@ -38,7 +37,6 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
     try {
       const formData = new FormData();
       
-      // Only include changed fields
       if (data.name !== user?.name && data.name) {
         formData.append('name', data.name);
       }
@@ -47,7 +45,6 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
         formData.append('bio', data.bio);
       }
       
-      // Handle avatar changes
       if (avatarPreview !== user?.avatar) {
         const avatarFile = avatarInputRef.current?.files?.[0];
         if (avatarFile) {
@@ -57,7 +54,6 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
         }
       }
 
-      // Handle portfolio changes
       if (portfolioFile) {
         formData.append('portfolio', portfolioFile);
       } else if (portfolioFileName === null && user?.portfolio) {
@@ -73,9 +69,16 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
     }
   };
 
-  // File validation helper
   const validateFileType = (file: File, allowedTypes: string[], errorMessage: string): boolean => {
     if (!allowedTypes.includes(file.type)) {
+      alert(errorMessage);
+      return false;
+    }
+    return true;
+  };
+
+  const validateFileSize = (file: File, maxSize: number, errorMessage: string): boolean => {
+    if (file.size > maxSize) {
       alert(errorMessage);
       return false;
     }
@@ -112,13 +115,9 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
   const handlePortfolioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      ];
+      const maxSize = 16 * 1024 * 1024; // 16MB in bytes
       
-      if (!validateFileType(file, allowedTypes, 'Please select a valid document file (PDF, DOC, DOCX)')) {
+      if (!validateFileSize(file, maxSize, 'File size must be less than 16MB')) {
         event.target.value = '';
         return;
       }
@@ -271,11 +270,10 @@ export function EditProfileModal({ user, onClose, initialAvatarUrl, userRole }: 
                     type="file"
                     ref={portfolioInputRef}
                     onChange={handlePortfolioChange}
-                    accept=".pdf,.doc,.docx"
                     className="hidden"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Accepted file types: PDF, DOC, DOCX
+                    Maximum file size: 16MB
                   </p>
                 </div>
               )}

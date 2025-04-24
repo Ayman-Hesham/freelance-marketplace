@@ -10,22 +10,18 @@ const jobSchema = new mongoose.Schema<IJob>({
         type: String,
         required: true,
     },
-    category: {
-        type: String,
-        required: true,
-    },
     budget: {
         type: Number,
         required: true,
     },
-    deliveryDate: {
+    deliveryTime: {
         type: Number,
         required: true,
     },
     status: {
         type: String,
-        enum: ['open', 'in-progress', 'pending approval', 'completed'],
-        default: 'open'
+        enum: ['Open', 'In Progress', 'Pending Approval', 'Completed'],
+        default: 'Open'
     },
     clientId: {
         type: mongoose.Schema.Types.ObjectId,

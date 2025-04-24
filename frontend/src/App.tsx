@@ -1,26 +1,18 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes/Routes';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { PulseLoader } from 'react-spinners';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from './context/AuthContext';
+
+const queryClient = new QueryClient()
 
 function App() {
   return (
-    <AuthProvider>
-      <AuthInit>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <RouterProvider router={router} />
-      </AuthInit>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
-}
-
-function AuthInit({ children }: { children: React.ReactNode }) {
-  const { isInitialized } = useAuth();
-  
-  if (!isInitialized) {
-    return <PulseLoader color="#36d7b7" />;
-  }
-
-  return <>{children}</>;
 }
 
 export default App;

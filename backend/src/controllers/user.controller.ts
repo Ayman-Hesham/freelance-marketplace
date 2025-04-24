@@ -101,6 +101,16 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
+    if (user.avatar) {
+      const avatarUrl = await getSignedDownloadUrl(user.avatar);
+      user.avatar = avatarUrl;
+    }
+
+    if (user.portfolio) {
+      const portfolioUrl = await getSignedDownloadUrl(user.portfolio);
+      user.portfolio = portfolioUrl;
+    }
+      
     res.status(200).json({
         id: user.id,
         name: user.name,
@@ -140,8 +150,6 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-    // Only admin or the user themselves should be able to delete a user
-    // For user deleting their own account, we can use req.user.id
     const userId = req.params.id || req.user?.id;
     
     if (!userId) {
@@ -164,8 +172,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
-  // Wrap the multer middleware
-  const handleMulterUpload = () => {
+    const handleMulterUpload = () => {
     return new Promise((resolve, reject) => {
       upload(req, res, (err) => {
         if (err) reject(err);
@@ -174,12 +181,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     });
   };
 
-  // Process the multipart form data
   await handleMulterUpload();
-
-  // Debug logs
-  console.log('Request body:', req.body);
-  console.log('Files:', req.files);
   
   const { name, bio } = req.body;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
@@ -188,16 +190,6 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
   const isAvatarDeleted = req.body.avatar === 'null';
   const isPortfolioDeleted = req.body.portfolio === 'null';
   
-  // More debug logs
-  console.log('Parsed values:', {
-    name,
-    bio,
-    avatarFile: avatarFile?.originalname,
-    portfolioFile: portfolioFile?.originalname,
-    isAvatarDeleted,
-    isPortfolioDeleted
-  });
-
   const user = await User.findById(req.user?.id);
   if (!user) {
     const error: ErrorWithStatus = new Error('User not found');
@@ -205,7 +197,6 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     throw error;
   }
 
-  // Handle name update
   if (name !== undefined && name !== null) {
     const sanitizedName = name.trim();
     if (sanitizedName.length < 3 || sanitizedName.length > 15) {
@@ -216,7 +207,6 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     user.name = sanitizedName;
   }
 
-  // Handle bio update
   if (bio !== undefined) {
     if (bio === null) {
       user.bio = null;
@@ -230,7 +220,6 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     }
   }
 
-  // Handle avatar update or deletion
   if (avatarFile || isAvatarDeleted) {
     if (user.avatar) {
       await deleteFromS3(user.avatar);
@@ -261,38 +250,24 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
   }
 
   await user.save();
-  
-  // Log the final user state before sending response
-  console.log('Updated user:', {
-    id: user.id,
-    name: user.name,
-    avatar: user.avatar,
-    bio: user.bio,
-    portfolio: user.portfolio
-  });
 
-  res.status(200).json({
-    id: user.id,
-    name: user.name,
-    avatar: user.avatar,
-    bio: user.bio,
-    portfolio: user.portfolio
-  });
-});
+  let avatarUrl = null;
+  let portfolioUrl = null;
 
-export const getFileDownloadUrl = asyncHandler(async (req: Request, res: Response) => {
-  const key = req.params.key;
-  
-  if (!key) {
-    const error: ErrorWithStatus = new Error('File key is required');
-    error.status = 400;
-    throw error;
+  if (user.avatar) {
+    avatarUrl = await getSignedDownloadUrl(user.avatar);
   }
 
-  const signedUrl = await getSignedDownloadUrl(key);
+  if (user.portfolio) {
+    portfolioUrl = await getSignedDownloadUrl(user.portfolio);
+  }
+  
   res.status(200).json({
-    downloadUrl: signedUrl,
-    filename: key.split('__').pop()
+    id: user.id,
+    name: user.name,
+    avatar: avatarUrl,
+    bio: user.bio,
+    portfolio: portfolioUrl
   });
 });
 

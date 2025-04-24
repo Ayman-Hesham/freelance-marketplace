@@ -14,33 +14,31 @@ export const database: DatabaseConfig = {
   connect: async (): Promise<void> => {
     try {
       await mongoose.connect(MONGODB_URI);
-      console.log('✅ Connected to MongoDB successfully');
+      console.log('Connected to MongoDB successfully');
     } catch (error) {
-      console.error('❌ MongoDB Atlas connection error:', error);
+      console.error('MongoDB Atlas connection error:', error);
     }
   },
 
   disconnect: async (): Promise<void> => {
     try {
       await mongoose.disconnect();
-      console.log('✅ Disconnected from MongoDB');
+      console.log('Disconnected from MongoDB');
     } catch (error) {
-      console.error('❌ MongoDB disconnection error:', error);
+      console.error('MongoDB disconnection error:', error);
       process.exit(1);
     }
   },
 };
 
-// Configure mongoose settings
 mongoose.set('strictQuery', true);
 
-// Handle connection events
 mongoose.connection.on('error', (error) => {
-  console.error('❌ MongoDB connection error:', error);
+  console.error('MongoDB connection error:', error);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('🔌 MongoDB disconnected');
+  console.log('MongoDB disconnected');
 });
 
 process.on('SIGINT', async () => {

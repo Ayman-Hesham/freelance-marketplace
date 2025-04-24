@@ -1,9 +1,8 @@
-import _React, { useState, useEffect, useCallback } from 'react';
+import _React, { useState, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { EditProfileModal } from '../../components/EditProfileModal';
-import { getFileDownloadUrl } from '../../services/UserService';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from 'react-spinners/PulseLoader';
 
@@ -11,25 +10,7 @@ import PulseLoader from 'react-spinners/PulseLoader';
 export const FreelancerProfile = () => {
   const { user, logout, isLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   
-  useEffect(() => {
-    async function loadAvatarUrl() {
-      if (user?.avatar) {
-          try {
-            const response = await getFileDownloadUrl(user.avatar);
-            if ('downloadUrl' in response) {
-              setAvatarUrl(response.downloadUrl);
-            }
-          } catch (error) {
-            console.error('Failed to load avatar URL:', error);
-            setAvatarUrl(undefined);
-          }
-      }
-    }
-    loadAvatarUrl();
-  }, [user?.avatar]);
-
   const handleEditClick = () => {
     setIsEditModalOpen(true);
   };
@@ -42,20 +23,6 @@ export const FreelancerProfile = () => {
       }, 100);
     }
   }, []);
-
-  const handlePortfolioDownload = async () => {
-    try {
-      const response = await getFileDownloadUrl(user?.portfolio || '');
-      if (!('downloadUrl' in response)) {
-        throw new Error('Invalid response format');
-      }
-
-      window.open(response.downloadUrl, '_blank');
-    } catch (error) {
-      alert('Failed to open portfolio');
-      console.error('Portfolio error:', error);
-    }
-  };
 
   return (
     <>
@@ -72,7 +39,7 @@ export const FreelancerProfile = () => {
         theme="colored"
         transition={Bounce}
       />
-      <div className="mt-24 p-4 flex justify-center">
+      <div className="mt-6 p-4 flex justify-center">
         <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">
           {/* Profile Header */}
           <div className="flex justify-between items-center mb-6">
@@ -89,7 +56,7 @@ export const FreelancerProfile = () => {
           {/* Profile Section */}
           <div className="flex items-center mb-6">
             <Avatar
-              src={avatarUrl}
+              src={user?.avatar}
               alt={user?.name}
               fallbackText={user?.name ? user.name.split(' ').map(n => n[0]).join('') : ''}
               size="large"
@@ -115,12 +82,14 @@ export const FreelancerProfile = () => {
             <div className="border border-gray-300 p-4 rounded-md">
               {user?.portfolio ? (
                 <div className="flex items-center">
-                  <button 
-                    onClick={handlePortfolioDownload}
+                  <a 
+                    href={user.portfolio}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 hover:underline"
                   >
-                    {user.portfolio.split('__').pop()}
-                  </button>
+                    {decodeURIComponent(user.portfolio.split('__').pop()?.split('?')[0] || '')}
+                  </a>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
@@ -155,7 +124,6 @@ export const FreelancerProfile = () => {
         <EditProfileModal 
           user={user}
           onClose={handleCloseModal}
-          initialAvatarUrl={avatarUrl}
           userRole="freelancer"
         />
       )}

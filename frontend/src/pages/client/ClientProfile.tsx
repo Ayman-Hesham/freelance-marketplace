@@ -1,34 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { EditProfileModal } from '../../components/EditProfileModal';
-import { getFileDownloadUrl } from '../../services/UserService';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
 
 export const ClientProfile = () => {
   const { user, logout, isLoading } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   
-  useEffect(() => {
-    async function loadAvatarUrl() {
-      if (user?.avatar) {
-        try {
-          const response = await getFileDownloadUrl(user.avatar);
-          if ('downloadUrl' in response) {
-            setAvatarUrl(response.downloadUrl);
-          }
-        } catch (error) {
-          console.error('Failed to load avatar URL:', error);
-          setAvatarUrl(undefined);
-        }
-      }
-    }
-    loadAvatarUrl();
-  }, [user?.avatar]);
-
   const handleEditClick = () => {
     setIsEditModalOpen(true);
   };
@@ -57,7 +38,7 @@ export const ClientProfile = () => {
         theme="colored"
         transition={Bounce}
       />
-      <div className="mt-24 p-4 flex justify-center">
+      <div className="mt-6 p-4 flex justify-center">
         <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">
           {/* Profile Header */}
           <div className="flex justify-between items-center mb-6">
@@ -74,7 +55,7 @@ export const ClientProfile = () => {
           {/* Profile Section */}
           <div className="flex items-center mb-6">
             <Avatar
-              src={avatarUrl}
+              src={user?.avatar}
               alt={user?.name}
               fallbackText={user?.name ? user.name.split(' ').map(n => n[0]).join('') : ''}
               size="large"
@@ -119,7 +100,6 @@ export const ClientProfile = () => {
         <EditProfileModal 
           user={user}
           onClose={handleCloseModal}
-          initialAvatarUrl={avatarUrl}
           userRole="client"
         />
       )}

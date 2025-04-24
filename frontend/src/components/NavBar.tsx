@@ -1,14 +1,24 @@
-import _React from 'react';
+import React from 'react';
 import { Search, FileText, MessageSquare, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
+import { useState } from 'react';
 
 
 type Props = {}
 
 export const Navbar = (_props: Props) => {
  const {user} = useAuth();
+ const navigate = useNavigate();
+ const [searchParams] = useSearchParams();
+ const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+
+ const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+   if (e.key === 'Enter' && searchQuery.trim()) {
+     navigate(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
+   }
+ };
 
   return (
     <nav className="bg-primary-500 py-3">
@@ -23,6 +33,9 @@ export const Navbar = (_props: Props) => {
           <div className="relative">
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               placeholder="Search jobs..."
               className="w-full px-4 py-2 rounded-lg pl-10"
             />

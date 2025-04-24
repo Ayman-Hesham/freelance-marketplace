@@ -13,9 +13,8 @@ export interface IUser extends mongoose.Document {
 export interface IJob extends mongoose.Document {
     title: string;
     description: string;
-    category: string;
     budget: number;
-    deliveryDate: number;
+    deliveryTime: number;
     status: string;
     clientId: mongoose.Types.ObjectId | IUser;
     freelancerId?: mongoose.Types.ObjectId | IUser;

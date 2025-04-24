@@ -267,7 +267,7 @@ export const RegisterPage = (_props: Props) => {
               {isLoading ? (
                 <PulseLoader
                 color="#ffffff"
-                size={15}
+                size={10}
                 />
               ) : (
                 "Create Account"

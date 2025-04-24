@@ -26,11 +26,7 @@ export const LoginPage = (_props: Props) => {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'client') {
-        navigate('/client-profile');
-      } else {
-        navigate('/freelancer-profile');
-      }
+      navigate('/jobs');
     }
   }, [user, navigate]);
 
