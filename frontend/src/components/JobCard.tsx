@@ -1,22 +1,52 @@
 import _React from 'react';
 import { Avatar } from './Avatar';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface JobCardProps {
+  id?: string;
   title: string;
   deliveryTime: number;
   budget: number;
   clientId?: string;
   status?: string;
-  poster?: {
+  hasApplications?: boolean;
+  poster: {
     id: string;
     name: string;
     avatarUrl: string;
   }
+  onDelete?: () => void;
 }
 
-export const JobCard = ({ title, deliveryTime, budget, clientId, status, poster }: JobCardProps) => {
+export const JobCard = ({ 
+  id,
+  title, 
+  deliveryTime, 
+  budget, 
+  clientId, 
+  status, 
+  poster, 
+  hasApplications,
+  onDelete 
+}: JobCardProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const inJobDetailsPage = location.pathname.includes('/jobs/');
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (inJobDetailsPage || (e.target as HTMLElement).tagName === 'BUTTON') return;
+    navigate(`/jobs/${id}`, {
+      state: { from: location.pathname }
+    });
+  };
+
   return (
-    <div className="bg-grey rounded-lg shadow-md p-4">
+    <div 
+      className={`bg-grey rounded-lg shadow-md p-4 ${
+        !inJobDetailsPage ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''
+      }`}
+      onClick={handleClick}
+    >
       <div className="flex gap-4 items-center">
         {!clientId && poster && (
           <div className="flex flex-col items-center w-[120px]">
@@ -47,11 +77,20 @@ export const JobCard = ({ title, deliveryTime, budget, clientId, status, poster 
             </span>
           </div>
         </div>
-        {clientId && (
+        {clientId && !inJobDetailsPage && (
           <div className="flex items-center">
-            <button className="px-4 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors">
-              Applications
-            </button>
+            {hasApplications ? (
+              <button className="px-4 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors">
+                Applications
+              </button>
+            ) : (
+              <button 
+                onClick={onDelete}
+                className="px-4 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors"
+              >
+                Delete
+              </button>
+            )}
           </div>
         )}
       </div>

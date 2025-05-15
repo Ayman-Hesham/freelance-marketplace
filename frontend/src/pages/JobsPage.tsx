@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FilterCard } from '../components/FilterCard';
 import { JobsList } from '../components/JobsList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getJobs, filterJobs, searchJobs } from '../services/JobService';
+import { getJobs, filterJobs, searchJobs } from '../services/job.service';
 import { GetJobsResponse, JobResponse } from '../types/job.types';
 import { PulseLoader } from 'react-spinners';
 import { X } from "lucide-react";
@@ -51,7 +51,7 @@ export const JobsPage = (_props: Props) => {
 
       return response;
     },
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30
   });
 
@@ -78,7 +78,7 @@ export const JobsPage = (_props: Props) => {
 
   if (isLoading) return (
     <div className="h-screen flex items-center justify-center">
-      <PulseLoader color="#36d7b7"/>
+      <PulseLoader color="#222E50"/>
     </div>
   )
 

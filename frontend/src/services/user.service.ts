@@ -1,5 +1,7 @@
 import axios from "axios";
 import { UpdateProfileResponse, FileDownloadResponse } from "../types/profile.types";
+import { handleApiError } from '../utils/api.error.handler';
+
 const apiClient = axios.create({
     baseURL: 'http://localhost:5000/api',
     withCredentials: true,
@@ -14,21 +16,9 @@ export const updateProfile = async (formData: FormData): Promise<UpdateProfileRe
         });
         return response.data;
     } catch (err) {
-        if(axios.isAxiosError(err)){
-            return {
-                message: err.response?.data?.message || err.message,
-                status: err.response?.status,
-                code: err.code,
-                timestamp: new Date().toISOString()
-            }
-        } else {
-            console.log("Unexpected error ", err)
-            return {
-                message: "Unexpected error"
-            }
-        }
+        return handleApiError(err);
     }
-}
+};
 
 
 export const logoutUser = async (): Promise<{success?: boolean, message?: string}> => {
@@ -36,17 +26,9 @@ export const logoutUser = async (): Promise<{success?: boolean, message?: string
         await apiClient.post('/auth/logout');
         return { success: true };
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            return {
-                message: err.response?.data?.message || err.message
-            };
-        } else {
-            return {
-                message: "Unexpected error"
-            };
-        }
+        return handleApiError(err);
     }
-}
+};
 
 export const getFileDownloadUrl = async (key: string): Promise<FileDownloadResponse> => {
     try {
@@ -57,18 +39,6 @@ export const getFileDownloadUrl = async (key: string): Promise<FileDownloadRespo
         });
         return response.data;
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            return {
-                message: err.response?.data?.message || err.message,
-                status: err.response?.status,
-                code: err.code,
-                timestamp: new Date().toISOString()
-            }
-        } else {
-            console.log("Unexpected error ", err);
-            return {
-                message: "Unexpected error"
-            }
-        }
+        return handleApiError(err);
     }
-}
+};

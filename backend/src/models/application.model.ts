@@ -16,8 +16,8 @@ const applicationSchema = new mongoose.Schema<IApplication>({
         type: String,
         required: true
     },
-    portfolioFile: {
-        type: Buffer,
+    portfolio: {
+        type: String,
         required: false
     },
     status: {
@@ -26,7 +26,7 @@ const applicationSchema = new mongoose.Schema<IApplication>({
         default: 'pending'
     },
     deliveredWork: {
-        type: Buffer,
+        type: String,
         default: null
     },
     deliveryMessage: {

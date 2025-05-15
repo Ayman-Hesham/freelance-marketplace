@@ -41,7 +41,6 @@ export const FreelancerProfile = () => {
       />
       <div className="mt-6 p-4 flex justify-center">
         <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">
-          {/* Profile Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-primary-500">Profile</h1>
             <button 
@@ -53,7 +52,6 @@ export const FreelancerProfile = () => {
             </button>
           </div>
           
-          {/* Profile Section */}
           <div className="flex items-center mb-6">
             <Avatar
               src={user?.avatar}
@@ -68,7 +66,6 @@ export const FreelancerProfile = () => {
 
           <div className="border-t border-gray-300 my-6"></div>
 
-          {/* Bio Section */}
           <div className="mb-6">
             <h2 className="font-medium mb-2 text-gray-700">Bio</h2>
             <div className="border border-gray-300 p-4 rounded-md">
@@ -76,7 +73,6 @@ export const FreelancerProfile = () => {
             </div>
           </div>
 
-          {/* Portfolio Section */}
           <div className="mb-12">
             <h2 className="font-medium mb-2 text-gray-700">Portfolio</h2>
             <div className="border border-gray-300 p-4 rounded-md">
@@ -99,7 +95,6 @@ export const FreelancerProfile = () => {
             </div>
           </div>
 
-          {/* Logout Button */}
           <div className="border-t border-gray-300 pt-6">
           <button 
               className="mx-auto block bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
@@ -119,7 +114,6 @@ export const FreelancerProfile = () => {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
       {isEditModalOpen && (
         <EditProfileModal 
           user={user}

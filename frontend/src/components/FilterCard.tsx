@@ -10,7 +10,14 @@ export const FilterCard = ({ onFilter }: Props) => {
   const [budget, setBudget] = useState([500]);
 
   const handleFilter = () => {
-    onFilter(budget[0], deliveryTime[0]);
+    const isBudgetMax = budget[0] >= 995;
+    const isDeliveryMax = deliveryTime[0] >= 30;
+    
+    if (isBudgetMax && isDeliveryMax) {
+      onFilter(undefined, undefined);
+    } else {
+      onFilter(isBudgetMax ? undefined : budget[0], isDeliveryMax ? undefined : deliveryTime[0]);
+    }
   };
 
   const handleReset = () => {

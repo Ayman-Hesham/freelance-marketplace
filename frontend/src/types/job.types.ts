@@ -7,7 +7,8 @@ export interface Job {
     budget: number;
     deliveryTime: number;
     status: string;
-    poster?: {
+    hasApplications?: boolean;
+    poster: {
         id: string;
         name: string;
         avatarUrl: string;
@@ -36,5 +37,9 @@ export type GetJobsResponse = JobResponse | ErrorResponse
 export type GetJobByIdResponse = Job | ErrorResponse
 
 export type CreateJobResponse = Job | ErrorResponse
+
+export type DeleteJobResponse = {
+    message: string;
+} | ErrorResponse
 
 

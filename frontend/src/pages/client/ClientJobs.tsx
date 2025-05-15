@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getJobsByClientId } from '../../services/JobService'
+import { getJobsByClientId, deleteJob } from '../../services/job.service'
 import { toast, ToastContainer } from 'react-toastify'
 import { Bounce } from 'react-toastify'
 import { Plus } from 'lucide-react'
@@ -9,17 +9,19 @@ import { JobsList } from '../../components/JobsList'
 import { useAuth } from '../../context/AuthContext'
 import { GetJobsResponse, JobResponse } from '../../types/job.types'
 import { PulseLoader } from 'react-spinners'
+import { DeleteJobDialog } from '../../components/DeleteJobDialog'
 
 export const ClientJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null)
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['clientJobs', user?.id],
-    queryFn: () => getJobsByClientId(user?.id || ''),
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    queryKey: ['clientJobs', user!.id],
+    queryFn: () => getJobsByClientId(user!.id),
+    staleTime: Infinity,
+    gcTime: Infinity,
   })
 
   const handleCloseModal = useCallback((wasCreated = false) => {
@@ -33,13 +35,32 @@ export const ClientJobs = () => {
     }
   }, [queryClient])
 
+  const handleDeleteJob = useCallback(async () => {
+    if (!jobToDelete) return
+
+    try {
+      await deleteJob(jobToDelete)
+      queryClient.invalidateQueries({ queryKey: ['clientJobs'] })
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      toast.success('Job deleted successfully')
+    } catch (error) {
+      toast.error('Failed to delete job')
+    } finally {
+      setJobToDelete(null)
+    }
+  }, [jobToDelete, queryClient])
+
+  const handleDeleteClick = useCallback((jobId: string) => {
+    setJobToDelete(jobId)
+  }, [])
+
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;
   }
 
   if (isLoading) return (
     <div className="h-screen flex items-center justify-center">
-      <PulseLoader color="#36d7b7"/>
+      <PulseLoader color="#222E50"/>
     </div>
   );
 
@@ -74,7 +95,11 @@ export const ClientJobs = () => {
 
           <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
             {jobsData && isJobResponse(jobsData) ? (
-              <JobsList jobs={jobsData.jobs} clientId={user?.id} />
+              <JobsList 
+                jobs={jobsData.jobs} 
+                clientId={user!.id} 
+                onDeleteJob={handleDeleteClick}
+              />
             ) : (
               <div className="text-center py-8 text-gray-500">
                 No jobs posted yet.
@@ -85,6 +110,14 @@ export const ClientJobs = () => {
       </div>
 
       {isModalOpen && <CreateJobModal onClose={handleCloseModal} />}
+      
+      {jobToDelete && (
+        <DeleteJobDialog
+          isOpen={!!jobToDelete}
+          onClose={() => setJobToDelete(null)}
+          onConfirm={handleDeleteJob}
+        />
+      )}
     </>
   )
 }

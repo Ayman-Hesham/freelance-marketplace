@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { createUser, loginUser } from '../services/AuthService';
-import { updateProfile, logoutUser } from '../services/UserService';
+import { createUser, loginUser } from '../services/auth.service';
+import { updateProfile, logoutUser } from '../services/user.service';
 import { RegistrationForm, LoginForm, User } from '../types/auth.types';
 
 interface AuthProviderProps {

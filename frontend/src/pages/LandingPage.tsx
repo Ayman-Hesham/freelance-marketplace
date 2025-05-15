@@ -24,7 +24,6 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <section className="min-h-screen flex items-center">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -63,7 +62,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-20 bg-primary-500">
         <div className="container mx-auto px-6 lg:px-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-white text-center mb-16">
@@ -77,7 +75,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Trust Section */}
       <section className="py-20">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex flex-col items-center text-center">

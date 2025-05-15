@@ -23,7 +23,7 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
 export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const job = await Job.findById(id);
+    const job = await Job.findById(id).populate('clientId', 'name avatar');
 
     if (!job) {
         const error: ErrorWithStatus = new Error('Job not found');
@@ -31,12 +31,24 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         throw error;
     }
 
+    let avatarUrl = null;
+    if (job.clientId && (job.clientId as any).avatar) {
+        avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
+    }
+
     res.status(200).json({
+        id: job._id,
         title: job.title,
         description: job.description,
         budget: job.budget,
         deliveryTime: job.deliveryTime,
-        status: job.status
+        status: job.status,
+        hasApplications: job.applications.length > 0,
+        poster: {
+            id: (job.clientId as any)._id,
+            name: (job.clientId as any).name,
+            avatarUrl
+        }
     });
 });
 
@@ -66,7 +78,8 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
             description: job.description,
             budget: job.budget,
             deliveryTime: job.deliveryTime,
-            status: job.status
+            status: job.status,
+            hasApplications: job.applications.length > 0
         })),
         total: jobs.length,
     });
@@ -117,11 +130,52 @@ export const filterJobs = asyncHandler(async (req: Request, res: Response) => {
 
     const query: any = { status: 'Open' };
     
-    if (budget) {
+    if (!budget && !deliveryTime) {
+        const jobs = await Job.find(query)
+            .sort({ createdAt: -1 })
+            .populate('clientId', 'name avatar');
+
+        if (!jobs.length) {
+            res.status(200).json({
+                jobs: [],
+                total: 0
+            });
+            return;
+        }
+
+        const jobsWithSignedUrls = await Promise.all(jobs.map(async (job) => {
+            let avatarUrl = null;
+            if (job.clientId && (job.clientId as any).avatar) {
+                avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
+            }
+
+            return {
+                id: job._id,
+                title: job.title,
+                description: job.description,
+                budget: job.budget,
+                deliveryTime: job.deliveryTime,
+                status: job.status,
+                poster: {
+                    id: (job.clientId as any)._id,
+                    name: (job.clientId as any).name,
+                    avatarUrl
+                }
+            };
+        }));
+
+        res.status(200).json({
+            jobs: jobsWithSignedUrls,
+            total: jobs.length,
+        });
+        return;
+    }
+    
+    if (budget && Number(budget) > 0) {
         query.budget = { $lte: Number(budget) };
     }
     
-    if (deliveryTime) {
+    if (deliveryTime && Number(deliveryTime) > 0) {
         query.deliveryTime = { $lte: Number(deliveryTime) };
     }
 
@@ -213,3 +267,17 @@ export const searchJobs = asyncHandler(async (req: Request, res: Response) => {
         total: jobs.length,
     });
 });
+
+export const deleteJob = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const job = await Job.findByIdAndDelete(id);
+    
+    if (!job) {
+        const error: ErrorWithStatus = new Error('Job not found');
+        error.status = 404;
+        throw error;
+    }
+
+    res.status(200).json({ message: 'Job deleted successfully' });
+})

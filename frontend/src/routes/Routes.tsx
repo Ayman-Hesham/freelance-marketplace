@@ -7,7 +7,8 @@ import { ClientProfile } from '../pages/client/ClientProfile'
 import { FreelancerProfile } from '../pages/freelancer/FreelancerProfile'
 import { ProtectedRoute } from './ProtectedRoute';
 import { Layout } from '../pages/Layout';
-import { ClientJobs } from '../pages/client/clientJobs';
+import { ClientJobs } from '../pages/client/ClientJobs';
+import JobDetailsPage from '../pages/JobDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -58,6 +59,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <JobsPage />
+        </Layout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/jobs/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <JobDetailsPage />
         </Layout>
       </ProtectedRoute>
     )

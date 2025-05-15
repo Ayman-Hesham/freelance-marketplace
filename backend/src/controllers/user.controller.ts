@@ -234,7 +234,6 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     }
   }
 
-  // Handle portfolio update or deletion
   if (portfolioFile || isPortfolioDeleted) {
     if (user.portfolio) {
       await deleteFromS3(user.portfolio);

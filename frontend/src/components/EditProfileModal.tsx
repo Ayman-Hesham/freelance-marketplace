@@ -150,12 +150,11 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
         
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Avatar Section */}
             <div className="flex flex-col items-center">
               <Avatar
                 src={avatarPreview || undefined}
                 alt={user?.name || ''}
-                fallbackText={user?.name ? user.name.charAt(0) : ''}
+                fallbackText={user?.name ? user.name.split(' ').map(n => n[0]).join('') : ''}
                 size="large"
                 className="w-32 h-32 mb-4"
               />
@@ -193,7 +192,6 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
               </div>
             </div>
             
-            {/* Profile Form */}
             <div className="col-span-2 space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

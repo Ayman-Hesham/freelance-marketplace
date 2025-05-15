@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { CreateJobRequest } from "../types/job.types"
 import { useState } from "react"
 import { PulseLoader } from "react-spinners"
-import { createJob } from "../services/JobService";
+import { createJob } from "../services/job.service";
 interface CreateJobModalProps {
     onClose: (wasCreated?: boolean) => void
 }

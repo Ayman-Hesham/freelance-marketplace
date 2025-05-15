@@ -18,7 +18,7 @@ export interface IJob extends mongoose.Document {
     status: string;
     clientId: mongoose.Types.ObjectId | IUser;
     freelancerId?: mongoose.Types.ObjectId | IUser;
-    applications?: mongoose.Types.ObjectId[] | IApplication[];
+    applications: mongoose.Types.ObjectId[] | IApplication[];
 }
 
 export interface IApplication extends mongoose.Document {
@@ -27,7 +27,7 @@ export interface IApplication extends mongoose.Document {
     coverLetter: string;
     portfolio: string;
     status: string;
-    deliveredWork?: Buffer;
+    deliveredWork?: string;
     deliveryMessage?: string;
     correctionMessage?: string;
 }

@@ -39,6 +39,5 @@ export async function getSignedDownloadUrl(key: string): Promise<string> {
     Key: key,
   });
 
-  // URL expires in 1 hour
   return getSignedUrl(s3Client, command, { expiresIn: 3600 });
 }

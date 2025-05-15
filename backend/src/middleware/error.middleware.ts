@@ -7,7 +7,6 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  // Enhanced logging with request details
   console.error(`Error: ${err.message}`);
   console.error(`Stack: ${err.stack}`);
   console.error(`Route: ${req.method} ${req.originalUrl}`);
