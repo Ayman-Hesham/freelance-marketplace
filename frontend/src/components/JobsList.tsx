@@ -1,5 +1,6 @@
 import { JobCard } from '../components/JobCard';
 import { Job } from '../types/job.types';
+import { useLocation } from 'react-router-dom';
 
 interface Props {
   jobs: Job[];
@@ -8,6 +9,9 @@ interface Props {
 }
 
 export const JobsList = ({ jobs, clientId, onDeleteJob }: Props) => {
+  const location = useLocation();
+  const inApplicationsPage = location.pathname.includes('/my-applications');
+
   return (
     <>  
         { jobs.length > 0 ? (
@@ -17,7 +21,11 @@ export const JobsList = ({ jobs, clientId, onDeleteJob }: Props) => {
                 </div>
             ))
         ) : (
-            <h1 className="text-center text-gray-500">No job postings</h1>
+            inApplicationsPage ? (
+                <h1 className="text-center text-gray-500">No applications</h1>
+            ) : (
+                <h1 className="text-center text-gray-500">No job postings</h1>
+            )
         )}       
     </>
   );

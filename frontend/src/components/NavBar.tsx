@@ -65,7 +65,7 @@ export const Navbar = (_props: Props) => {
             </div>
           ):(
             <div className="flex items-center gap-8 mx-4">
-              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="My Applications">
+              <Link to='/my-applications' data-tooltip-id="tooltip" data-tooltip-content="My Applications">
                 <button className="text-white hover:text-secondary-500 transition">
                   <FileText className="w-6 h-6" />
                 </button>

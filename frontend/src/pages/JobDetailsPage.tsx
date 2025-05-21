@@ -8,20 +8,24 @@ import { useAuth } from '../context/AuthContext'
 import { JobsList } from '../components/JobsList'
 import { DeleteJobDialog } from '../components/DeleteJobDialog'
 import { toast } from 'react-toastify'
+import ApplicationModal from '../components/ApplicationModal'
 
-function JobDetailsPage() {
+
+export const JobDetailsPage = () => {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const location = useLocation()
-  const sourceRoute = location.state?.from || '/jobs'
+  const sourceRoute = location.state?.from
   const isFromClientJobs = sourceRoute.includes('/my-jobs')
+  const isApplication = sourceRoute.includes('/my-applications')
   const [jobToDelete, setJobToDelete] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
-    queryFn: () => getJobById(id!),
+    queryFn: () => getJobById(id!, isApplication),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
@@ -32,7 +36,7 @@ function JobDetailsPage() {
 
     try {
       await deleteJob(jobToDelete)
-      queryClient.invalidateQueries({ queryKey: ['clientJobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       navigate('/my-jobs')
     } catch (error) {
@@ -44,6 +48,19 @@ function JobDetailsPage() {
 
   const handleDeleteClick = useCallback((jobId: string) => {
     setJobToDelete(jobId)
+  }, [])
+
+  const handleCloseModal = useCallback((wasCreated = false) => {
+    setIsModalOpen(false)
+    if (wasCreated) {
+        queryClient.invalidateQueries({ queryKey: ['applications', user!.id] })
+        navigate('/my-applications', { 
+            state: { 
+                from: location.pathname,
+                applicationSuccess: true 
+            }
+        })     
+    }
   }, [])
 
   if (isLoading) {
@@ -98,6 +115,32 @@ function JobDetailsPage() {
                             )}
                         </div>
                     </>
+                ) : isApplication ? (
+                    <>
+                        <JobsList 
+                            jobs={[job]} 
+                        />
+
+                        <div className="bg-grey rounded-lg p-6 shadow-md">
+                            <div className="prose max-w-none">
+                                <h2 className="text-xl font-semibold mb-4">Job Description</h2>
+                                <p className="whitespace-pre-wrap break-words">
+                                    {job.description}
+                                </p>
+                            </div>
+                        </div>
+
+                        {job.status === "in-progress" && (
+                            <div className="mt-8 flex justify-center">
+                                <button 
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="px-6 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors"
+                                >
+                                    Submit Work
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <>
                         <JobsList 
@@ -112,10 +155,10 @@ function JobDetailsPage() {
                                 </p>
                             </div>
                             
-                            {user?.id !== job.poster?.id && (
+                            {user?.id !== job.poster?.id && user?.role === "freelancer" && !job.hasApplied && (
                                 <div className="mt-8 flex justify-center">
                                     <button 
-                                        onClick={() => {/* Apply logic */}}
+                                        onClick={() => setIsModalOpen(true)}
                                         className="px-6 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors"
                                     >
                                         Apply
@@ -133,6 +176,12 @@ function JobDetailsPage() {
                     isOpen={!!jobToDelete}
                     onClose={() => setJobToDelete(null)}
                     onConfirm={handleDeleteJob}
+                />
+            )}
+
+            {isModalOpen && (
+                <ApplicationModal
+                    onClose={handleCloseModal}
                 />
             )}
         </div>

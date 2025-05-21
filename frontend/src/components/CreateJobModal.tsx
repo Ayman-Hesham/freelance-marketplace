@@ -3,6 +3,7 @@ import { CreateJobRequest } from "../types/job.types"
 import { useState } from "react"
 import { PulseLoader } from "react-spinners"
 import { createJob } from "../services/job.service";
+
 interface CreateJobModalProps {
     onClose: (wasCreated?: boolean) => void
 }
@@ -143,7 +144,7 @@ export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <PulseLoader color="#ffffff" size={10} />
+                <PulseLoader color="#222E50" size={10} />
               ) : (
                 'Create Job'
               )}

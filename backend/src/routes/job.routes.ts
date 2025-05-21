@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/filter', protect, filterJobs);
 router.get('/search', protect, searchJobs);
-router.get('/client/:id', protect, getJobsByClientId);
+router.get('/by-client/:id', protect, getJobsByClientId);
 
 router.get('/', protect, getJobs);
 router.post('/', protect, createJob);

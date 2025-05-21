@@ -9,6 +9,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { Layout } from '../pages/Layout';
 import { ClientJobs } from '../pages/client/ClientJobs';
 import JobDetailsPage from '../pages/JobDetailsPage';
+import FreelancerApplications from '../pages/freelancer/FreelancerApplications';
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <JobDetailsPage />
+        </Layout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/my-applications",
+    element: (
+      <ProtectedRoute requiredRole="freelancer">
+        <Layout>
+          <FreelancerApplications />
         </Layout>
       </ProtectedRoute>
     )

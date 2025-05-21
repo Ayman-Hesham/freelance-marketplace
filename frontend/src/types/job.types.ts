@@ -8,6 +8,7 @@ export interface Job {
     deliveryTime: number;
     status: string;
     hasApplications?: boolean;
+    hasApplied?: boolean;
     poster: {
         id: string;
         name: string;

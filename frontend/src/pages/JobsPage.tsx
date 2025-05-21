@@ -110,12 +110,8 @@ export const JobsPage = (_props: Props) => {
             )}
             <div className="space-y-3 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
               <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-                {jobsData && isJobResponse(jobsData) ? (
+                {jobsData && isJobResponse(jobsData) && (
                   <JobsList jobs={jobsData.jobs} />
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    {searchQuery ? `No jobs found for "${searchQuery}"` : 'No jobs posted yet.'}
-                  </div>
                 )}
               </div>
             </div>

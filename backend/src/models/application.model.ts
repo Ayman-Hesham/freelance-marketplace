@@ -22,8 +22,8 @@ const applicationSchema = new mongoose.Schema<IApplication>({
     },
     status: {
         type: String,
-        enum: ['pending', 'in-progress', 'rejected', 'pending approval', 'completed', 'correction'],
-        default: 'pending'
+        enum: ['Pending', 'In Progress', 'Rejected', 'Pending Approval', 'Completed', 'Correction'],
+        default: 'Pending'
     },
     deliveredWork: {
         type: String,
@@ -40,3 +40,13 @@ const applicationSchema = new mongoose.Schema<IApplication>({
 }, {
     timestamps: true
 });
+
+applicationSchema.index({ createdAt: 1 });
+
+applicationSchema.pre('findOneAndUpdate', function() {
+    this.set({ updatedAt: new Date() });
+});
+
+const Application = mongoose.model<IApplication>('Application', applicationSchema);
+
+export default Application;

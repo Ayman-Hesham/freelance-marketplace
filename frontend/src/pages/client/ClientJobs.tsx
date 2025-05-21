@@ -20,27 +20,27 @@ export const ClientJobs = () => {
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['clientJobs', user!.id],
     queryFn: () => getJobsByClientId(user!.id),
-    staleTime: Infinity,
-    gcTime: Infinity,
+    staleTime: 0,
+    gcTime: 0,
   })
 
   const handleCloseModal = useCallback((wasCreated = false) => {
     setIsModalOpen(false)
     if (wasCreated) {
-      queryClient.invalidateQueries({ queryKey: ['clientJobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       setTimeout(() => {
         toast.success('Job created successfully')
       }, 100)
     }
-  }, [queryClient])
+  }, [])
 
   const handleDeleteJob = useCallback(async () => {
     if (!jobToDelete) return
 
     try {
       await deleteJob(jobToDelete)
-      queryClient.invalidateQueries({ queryKey: ['clientJobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       toast.success('Job deleted successfully')
     } catch (error) {
@@ -94,16 +94,12 @@ export const ClientJobs = () => {
           </div>
 
           <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
-            {jobsData && isJobResponse(jobsData) ? (
+            {jobsData && isJobResponse(jobsData) && (
               <JobsList 
                 jobs={jobsData.jobs} 
                 clientId={user!.id} 
                 onDeleteJob={handleDeleteClick}
               />
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No jobs posted yet.
-              </div>
             )}
           </div>
         </div>

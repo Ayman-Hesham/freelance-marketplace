@@ -8,7 +8,7 @@ interface JobCardProps {
   deliveryTime: number;
   budget: number;
   clientId?: string;
-  status?: string;
+  status: string;
   hasApplications?: boolean;
   poster: {
     id: string;
@@ -31,7 +31,10 @@ export const JobCard = ({
 }: JobCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const inJobDetailsPage = location.pathname.includes('/jobs/');
+  
+  const inJobDetailsPage = location.pathname === `/jobs/${id}`;
+  const fromAllJobsPage = location.state?.from === '/jobs';
+  const inApplicationsPage = location.pathname === '/my-applications';
 
   const handleClick = (e: React.MouseEvent) => {
     if (inJobDetailsPage || (e.target as HTMLElement).tagName === 'BUTTON') return;
@@ -67,7 +70,7 @@ export const JobCard = ({
           </h3>
           <div className="flex items-center gap-8">
             <div>Delivery time: {deliveryTime} days</div>
-            {status && (
+            {status && (!fromAllJobsPage || inApplicationsPage) && (
               <div>
                 Status: {status}
               </div>

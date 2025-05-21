@@ -20,9 +20,9 @@ export const getJobs = async (): Promise<GetJobsResponse> => {
 };
 
 
-export const getJobById = async (id: string): Promise<GetJobByIdResponse> => {
+export const getJobById = async (id: string, isFromFreelancerApplications?: boolean): Promise<GetJobByIdResponse> => {
     try {
-        const response = await apiClient.get(`/jobs/${id}`);
+        const response = await apiClient.get(`/jobs/${id}?isApplication=${isFromFreelancerApplications}`);
         return response.data;
     } catch (err) {
         return handleApiError(err);
@@ -31,7 +31,7 @@ export const getJobById = async (id: string): Promise<GetJobByIdResponse> => {
 
 export const getJobsByClientId = async (clientId: string): Promise<GetJobsResponse> => {
     try{
-        const response = await apiClient.get(`/jobs/client/${clientId}`);
+        const response = await apiClient.get(`/jobs/by-client/${clientId}`);
         return response.data;
     } catch (err) {
         return handleApiError(err);

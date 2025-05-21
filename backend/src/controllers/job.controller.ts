@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { ErrorWithStatus } from '../types/error.types';
 import Job from '../models/job.model';
 import { getSignedDownloadUrl } from '../services/s3.service';
+import Application from '../models/application.model';
 
 export const createJob = asyncHandler(async (req: Request, res: Response) => {
     const { title, description, budget, deliveryTime } = req.body;
@@ -22,8 +23,10 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
 
 export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
+    const isApplication = req.query.isApplication === 'true';
 
-    const job = await Job.findById(id).populate('clientId', 'name avatar');
+    const job = await Job.findById(id).populate('clientId', 'name avatar')
+    .populate('applications');
 
     if (!job) {
         const error: ErrorWithStatus = new Error('Job not found');
@@ -36,14 +39,27 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
     }
 
+    let hasApplied = null;
+    const application = await Application.findOne({ jobId: job._id, freelancerId: req.user?.id });
+    if (application) {
+        hasApplied = true;
+    }
+
+    let applicationStatus = null;
+    if (isApplication) {
+        const application = await Application.findOne({ jobId: job._id, freelancerId: req.user?.id });
+        applicationStatus = application?.status;
+    }
+
     res.status(200).json({
         id: job._id,
         title: job.title,
         description: job.description,
         budget: job.budget,
         deliveryTime: job.deliveryTime,
-        status: job.status,
+        status: applicationStatus,
         hasApplications: job.applications.length > 0,
+        hasApplied: hasApplied,
         poster: {
             id: (job.clientId as any)._id,
             name: (job.clientId as any).name,
@@ -61,7 +77,9 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
         throw error;
     }
 
-    const jobs = await Job.find({clientId: id}).sort({ createdAt: -1 });
+    const jobs = await Job.find({clientId: id})
+        .populate('applications', 'freelancerId')
+        .sort({ createdAt: -1 });
 
     if (!jobs.length) {
         res.status(200).json({
@@ -79,7 +97,8 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
             budget: job.budget,
             deliveryTime: job.deliveryTime,
             status: job.status,
-            hasApplications: job.applications.length > 0
+            hasApplications: job.applications.length > 0,
+            clientId: job.clientId
         })),
         total: jobs.length,
     });
@@ -110,7 +129,6 @@ export const getJobs = asyncHandler(async (req: Request, res: Response) => {
             description: job.description,
             budget: job.budget,
             deliveryTime: job.deliveryTime,
-            status: job.status,
             poster: {
                 id: (job.clientId as any)._id,
                 name: (job.clientId as any).name,
