@@ -4,7 +4,7 @@ import { getApplicationsByFreelancerId } from '../../services/application.servic
 import { JobsList } from '../../components/JobsList'
 import { useAuth } from '../../context/AuthContext'
 import { JobResponse } from '../../types/job.types'
-import { ApplicationsByIdResponse } from '../../types/application.types'
+import { ApplicationsByFreelancerIdResponse } from '../../types/application.types'
 import { useLocation } from 'react-router-dom'
 import { PulseLoader } from 'react-spinners'
 import { useEffect } from 'react'
@@ -15,10 +15,10 @@ const FreelancerApplications = () => {
   const applicationSuccess = location.state?.applicationSuccess
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['applications', user!.id],
+    queryKey: ['applications', 'freelancer', user!.id],
     queryFn: () => getApplicationsByFreelancerId(user!.id),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   })
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const FreelancerApplications = () => {
     }
   }, [applicationSuccess])
 
-  const isJobResponse = (data: ApplicationsByIdResponse): data is JobResponse => {
+  const isJobResponse = (data: ApplicationsByFreelancerIdResponse): data is JobResponse => {
     return 'jobs' in data;
   }
 

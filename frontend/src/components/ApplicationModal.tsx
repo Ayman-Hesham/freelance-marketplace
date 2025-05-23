@@ -7,6 +7,7 @@ import { Trash2, Upload } from "lucide-react"
 import { useParams } from 'react-router-dom'
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "../context/AuthContext"
+import { Job } from "../types/job.types"
 
 interface Props {
     onClose: (wasCreated?: boolean) => void
@@ -72,8 +73,17 @@ const ApplicationModal = ({ onClose }: Props) => {
                 setIsSubmitting(false)
                 return
             } 
+
+            const cachedJob = queryClient.getQueryData(['job', id])
+            const clientId = (cachedJob as Job)?.poster.id
+
+            if (clientId) {
+                queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId] })
+            }
+
             queryClient.invalidateQueries({ queryKey: ['job', id] })
-            queryClient.invalidateQueries({ queryKey: ['applications', user!.id] })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', user!.id] })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'job', id] })
             onClose(true)
         } catch (error) {
             console.error('Creation error:', error)

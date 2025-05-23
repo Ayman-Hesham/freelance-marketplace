@@ -3,12 +3,10 @@ import { Job } from "./job.types";
 
 export interface Application {
     id?: string;
-    jobId: string;
-    freelancerId: string;
     coverLetter: string;
     portfolio: string;
-    status: string;
-    freelancer?: {
+    status?: string;
+    poster: {
         id: string;
         name: string;
         avatarUrl: string;
@@ -23,7 +21,14 @@ export type CreateApplicationRequest = {
 
 export type CreateApplicationResponse = Application | ErrorResponse
 
-export type ApplicationsByIdResponse = {
+export type ApplicationsByFreelancerIdResponse = {
     jobs: Job[];
     total: number;
 } | ErrorResponse
+
+export interface ApplicationsResponse {
+    applications: Application[];
+    total: number;
+} 
+
+export type ApplicationByJobIdResponse = ApplicationsResponse | ErrorResponse

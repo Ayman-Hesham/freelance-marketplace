@@ -20,8 +20,8 @@ export const ClientJobs = () => {
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['clientJobs', user!.id],
     queryFn: () => getJobsByClientId(user!.id),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   })
 
   const handleCloseModal = useCallback((wasCreated = false) => {

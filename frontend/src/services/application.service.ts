@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationsByIdResponse, CreateApplicationResponse } from '../types/application.types';
+import { ApplicationByJobIdResponse, ApplicationsByFreelancerIdResponse, CreateApplicationResponse } from '../types/application.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
@@ -23,7 +23,7 @@ export const createApplication = async (formData: FormData): Promise<CreateAppli
     }
 };
 
-export const getApplicationsByFreelancerId = async (freelancerId: string): Promise<ApplicationsByIdResponse> => {
+export const getApplicationsByFreelancerId = async (freelancerId: string): Promise<ApplicationsByFreelancerIdResponse> => {
     try {
         const response = await apiClient.get(`/applications/by-freelancer/${freelancerId}`);
         return response.data;
@@ -32,7 +32,7 @@ export const getApplicationsByFreelancerId = async (freelancerId: string): Promi
     }
 };
 
-export const getApplicationsByJobId = async (jobId: string): Promise<ApplicationsByIdResponse> => {
+export const getApplicationsByJobId = async (jobId: string): Promise<ApplicationByJobIdResponse> => {
     try {
         const response = await apiClient.get(`/applications/by-job/${jobId}`);
         return response.data;

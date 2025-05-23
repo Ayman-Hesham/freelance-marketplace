@@ -98,7 +98,9 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
             deliveryTime: job.deliveryTime,
             status: job.status,
             hasApplications: job.applications.length > 0,
-            clientId: job.clientId
+            poster: {
+                id: (job.clientId as any)._id,
+            }
         })),
         total: jobs.length,
     });

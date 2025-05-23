@@ -10,6 +10,7 @@ import { Layout } from '../pages/Layout';
 import { ClientJobs } from '../pages/client/ClientJobs';
 import JobDetailsPage from '../pages/JobDetailsPage';
 import FreelancerApplications from '../pages/freelancer/FreelancerApplications';
+import JobApplicationsPage from '../pages/client/JobApplicationsPage';
 
 export const router = createBrowserRouter([
   {
@@ -62,7 +63,7 @@ export const router = createBrowserRouter([
           <JobsPage />
         </Layout>
       </ProtectedRoute>
-    )
+    ),
   },
   {
     path: "/jobs/:id",
@@ -70,6 +71,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <JobDetailsPage />
+        </Layout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/applications/by-job/:id",
+    element: (
+      <ProtectedRoute requiredRole="client">
+        <Layout>
+          <JobApplicationsPage />
         </Layout>
       </ProtectedRoute>
     )

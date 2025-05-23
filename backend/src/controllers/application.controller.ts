@@ -41,15 +41,6 @@ export const createApplication = asyncHandler(async (req: Request, res: Response
         throw error;
     }
 
-    const job = await Job.findById(jobId)
-        .populate('applications');
-    
-    if (!job) {
-        const error: ErrorWithStatus = new Error('Job not found');
-        error.status = 404;
-        throw error;
-    }
-
     const freelancerId = req.user?.id;
 
     let portfolioKey = null;
@@ -139,9 +130,15 @@ export const getApplicationsByFreelancerId = asyncHandler(async (req: Request, r
 });
 
 export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Response) => {
-    const { jobId } = req.params;
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        const error: ErrorWithStatus = new Error('Invalid job ID format');
+        error.status = 400;
+        throw error;
+    }
 
-    const applications = await Application.find({ jobId })
+    const applications = await Application.find({ jobId: new mongoose.Types.ObjectId(id) })
         .sort({ createdAt: 1 })
         .populate('freelancerId', 'name avatar')
         .lean()
@@ -165,7 +162,7 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
             id: application._id,
             portfolio: portfolioUrl,
             coverLetter: application.coverLetter,
-            freelancer: {
+            poster: {
                 id: (application.freelancerId as any)._id,
                 name: (application.freelancerId as any).name,
                 avatarUrl
@@ -173,6 +170,9 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
         };
     }));
 
-    res.status(200).json(applicationsWithUrls);
+    res.status(200).json({
+        applications: applicationsWithUrls,
+        total: applicationsWithUrls.length
+    });
 });
 

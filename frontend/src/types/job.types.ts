@@ -11,8 +11,8 @@ export interface Job {
     hasApplied?: boolean;
     poster: {
         id: string;
-        name: string;
-        avatarUrl: string;
+        name?: string;
+        avatarUrl?: string;
     }
 }
 
