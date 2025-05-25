@@ -11,6 +11,7 @@ import { ClientJobs } from '../pages/client/ClientJobs';
 import JobDetailsPage from '../pages/JobDetailsPage';
 import FreelancerApplications from '../pages/freelancer/FreelancerApplications';
 import JobApplicationsPage from '../pages/client/JobApplicationsPage';
+import ApplicationDetailsPage from '../pages/client/ApplicationDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -81,6 +82,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute requiredRole="client">
         <Layout>
           <JobApplicationsPage />
+        </Layout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/applications/:id",
+    element: (
+      <ProtectedRoute requiredRole="client">
+        <Layout>
+          <ApplicationDetailsPage />
         </Layout>
       </ProtectedRoute>
     )

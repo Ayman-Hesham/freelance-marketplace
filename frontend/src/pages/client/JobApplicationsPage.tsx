@@ -25,8 +25,6 @@ const JobApplicationsPage = () => {
     </div>
   );
 
-  console.log('Applications data:', applications);
-
   return (
     <div className="mt-6 p-4 flex justify-center">
         <div className="rounded-lg p-8 w-full max-w-4xl border border-gray-300">

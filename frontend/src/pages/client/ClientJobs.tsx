@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getJobsByClientId, deleteJob } from '../../services/job.service'
 import { toast, ToastContainer } from 'react-toastify'
@@ -24,7 +24,7 @@ export const ClientJobs = () => {
     gcTime: 1000 * 60 * 30,
   })
 
-  const handleCloseModal = useCallback((wasCreated = false) => {
+  const handleCloseModal = (wasCreated = false) => {
     setIsModalOpen(false)
     if (wasCreated) {
       queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
@@ -33,9 +33,9 @@ export const ClientJobs = () => {
         toast.success('Job created successfully')
       }, 100)
     }
-  }, [])
+  }
 
-  const handleDeleteJob = useCallback(async () => {
+  const handleDeleteJob = async () => {
     if (!jobToDelete) return
 
     try {
@@ -48,11 +48,11 @@ export const ClientJobs = () => {
     } finally {
       setJobToDelete(null)
     }
-  }, [jobToDelete, queryClient])
+  }
 
-  const handleDeleteClick = useCallback((jobId: string) => {
+  const handleDeleteClick = (jobId: string) => {
     setJobToDelete(jobId)
-  }, [])
+  }
 
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;

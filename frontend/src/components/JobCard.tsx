@@ -1,6 +1,6 @@
 import _React from 'react';
 import { Avatar } from './Avatar';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 interface JobCardProps {
   id?: string;
@@ -33,6 +33,7 @@ export const JobCard = ({
 }: JobCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id: jobId } = useParams()
   
   const inJobDetailsPage = location.pathname === `/jobs/${id}`;
   const fromAllJobsPage = location.state?.from === '/jobs';
@@ -44,9 +45,9 @@ export const JobCard = ({
   const handleClick = (e: React.MouseEvent) => {
     if (inJobApplicationsPage && (e.target as HTMLElement).tagName !== 'A') {
       navigate(`/applications/${id}`, {
-        state: { from: location.pathname }
+        state: { from: location.pathname, jobId: jobId }
       })
-    } else if (inJobDetailsPage || (e.target as HTMLElement).tagName === 'BUTTON' || (e.target as HTMLElement).tagName === 'A') {
+    } else if (inJobDetailsPage || (e.target as HTMLElement).tagName === 'BUTTON' || (e.target as HTMLElement).tagName === 'A' || inApplicationDetailsPage) {
       return;
     } else {
       navigate(`/jobs/${id}`, {
@@ -76,7 +77,7 @@ export const JobCard = ({
             </span>
           </div>
         )}
-        {inJobApplicationsPage ? (
+        {inJobApplicationsPage || inApplicationDetailsPage ? (
           <div className={`flex-1 min-w-0 pl-4 border-l border-gray-300`}>
             <a 
               href={portfolio}

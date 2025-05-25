@@ -31,7 +31,7 @@ export const JobDetailsPage = () => {
     gcTime: 1000 * 60 * 30,
   })
 
-  const handleDeleteJob = useCallback(async () => {
+  const handleDeleteJob = async () => {
     if (!jobToDelete) return
 
     try {
@@ -44,13 +44,13 @@ export const JobDetailsPage = () => {
     } finally {
       setJobToDelete(null)
     }
-  }, [jobToDelete, queryClient, navigate, isFromClientJobs])
+  }
 
-  const handleDeleteClick = useCallback((jobId: string) => {
+  const handleDeleteClick = (jobId: string) => {
     setJobToDelete(jobId)
-  }, [])
+  }
 
-  const handleCloseModal = useCallback((wasCreated = false) => {
+  const handleCloseModal = (wasCreated = false) => {
     setIsModalOpen(false)
     if (wasCreated) {
         queryClient.invalidateQueries({ queryKey: ['applications', user!.id] })
@@ -61,7 +61,7 @@ export const JobDetailsPage = () => {
             }
         })     
     }
-  }, [])
+  }
 
   if (isLoading) {
     return (

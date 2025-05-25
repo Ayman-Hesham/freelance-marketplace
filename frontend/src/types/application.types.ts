@@ -2,7 +2,7 @@ import { ErrorResponse } from "./auth.types";
 import { Job } from "./job.types";
 
 export interface Application {
-    id?: string;
+    id: string;
     coverLetter: string;
     portfolio: string;
     status?: string;
