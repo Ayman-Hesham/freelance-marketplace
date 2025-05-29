@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getJobsByClientId, deleteJob } from '../../services/job.service'
 import { toast, ToastContainer } from 'react-toastify'
@@ -10,12 +10,16 @@ import { useAuth } from '../../context/AuthContext'
 import { GetJobsResponse, JobResponse } from '../../types/job.types'
 import { PulseLoader } from 'react-spinners'
 import { DeleteJobDialog } from '../../components/DeleteJobDialog'
+import { useLocation } from 'react-router-dom'
 
 export const ClientJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [jobToDelete, setJobToDelete] = useState<string | null>(null)
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const jobDeleted = location.state?.jobDeleted
+  const ApplicationAccepted = location.state?.ApplicationAccepted
 
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['clientJobs', user!.id],
@@ -57,6 +61,17 @@ export const ClientJobs = () => {
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;
   }
+
+  useEffect(() => {
+    if (ApplicationAccepted) {
+        toast.success('Application accepted successfully!')
+        window.history.replaceState({}, document.title)
+    }
+    if (jobDeleted) {
+        toast.success('Job deleted successfully!')
+        window.history.replaceState({}, document.title)
+    }
+  }, [ApplicationAccepted, jobDeleted])
 
   if (isLoading) return (
     <div className="h-screen flex items-center justify-center">

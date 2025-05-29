@@ -1,25 +1,52 @@
 import { useQuery } from "@tanstack/react-query"
 import { useQueryClient } from "@tanstack/react-query"
-import { useParams, useLocation } from "react-router-dom"
+import { useParams, useLocation, useNavigate } from "react-router-dom"
 import { ApplicationByJobIdResponse, ApplicationsResponse } from "../../types/application.types"
 import { PulseLoader } from "react-spinners"
 import { JobsList } from "../../components/JobsList"
 import { useState } from "react"
 import { AcceptApplicationDialog } from "../../components/AcceptApplicationDialog"
+import { acceptApplication } from "../../services/application.service"
+import { toast } from "react-toastify"
+import { useAuth } from "../../context/AuthContext"
 
 const ApplicationDetailsPage = () => {
     const queryClient = useQueryClient()
     const { id: applicationId } = useParams<{ id: string }>()
     const location = useLocation()
+    const navigate = useNavigate()
     const jobId = location.state?.jobId
+    const { user } = useAuth()
     const [applicationToAccept, setApplicationToAccept] = useState<string | null>(null)
 
     const handleAcceptClick = (applicationId: string) => {
         setApplicationToAccept(applicationId)
     }
 
-    const handleAcceptApplication = () => {
-        console.log('Application accepted')
+    const handleAcceptApplication = async () => {
+        if (!applicationId) return;
+
+        try {
+            const response = await acceptApplication(applicationId);
+            
+            if (response) {
+                await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['job', jobId] }),
+                    queryClient.invalidateQueries({ queryKey: ['applications', 'job', jobId] }),
+                    queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+                    queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer'] }),
+                    queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
+                ]);
+
+                setApplicationToAccept(null);
+                
+                navigate('/my-jobs', {
+                    state: { ApplicationAccepted: true }
+                });
+            }
+        } catch (error) {
+            toast.error('Error accepting application');
+        }
     }
 
     const { data: application, isLoading } = useQuery({

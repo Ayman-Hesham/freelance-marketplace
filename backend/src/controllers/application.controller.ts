@@ -176,3 +176,53 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
     });
 });
 
+export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const application = await Application.findById(id);
+
+        if (!application) {
+            const error: ErrorWithStatus = new Error('Application not found');
+            error.status = 404;
+            throw error;
+        }
+
+        if (status === 'In-Progress') {
+            application.status = 'In-Progress';
+            await application.save({ session });
+
+            await Application.updateMany(
+                { 
+                    jobId: application.jobId,
+                    _id: { $ne: id }
+                },
+                { status: 'Rejected' },
+                { session }
+            );
+
+            await Job.findByIdAndUpdate(
+                application.jobId,
+                { 
+                    status: 'In Progress',
+                    freelancerId: application.freelancerId 
+                },
+                { session }
+            );
+        }
+
+        await session.commitTransaction();
+        res.status(200).json({
+            message: 'Application and job status updated successfully'
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
+});

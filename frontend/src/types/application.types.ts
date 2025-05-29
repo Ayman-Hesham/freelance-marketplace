@@ -32,3 +32,7 @@ export interface ApplicationsResponse {
 } 
 
 export type ApplicationByJobIdResponse = ApplicationsResponse | ErrorResponse
+
+export type AcceptApplicationResponse = {
+    message: string;
+} | ErrorResponse

@@ -41,6 +41,7 @@ export const JobCard = ({
   const notInClientJobsPage = !clientId && poster;
   const inJobApplicationsPage = location.pathname.includes(`/applications/by-job/`);
   const inApplicationDetailsPage = location.pathname === `/applications/${id}`;
+  const jobInProgress = status === 'In-Progress';
 
   const handleClick = (e: React.MouseEvent) => {
     if (inJobApplicationsPage && (e.target as HTMLElement).tagName !== 'A') {
@@ -106,7 +107,7 @@ export const JobCard = ({
             </div>
           </div>
         )}
-        {clientId && !inJobDetailsPage && !inJobApplicationsPage && (
+        {clientId && !inJobDetailsPage && !inJobApplicationsPage && !jobInProgress && (
           <div className="flex items-center">
             {hasApplications ? (
               <button 

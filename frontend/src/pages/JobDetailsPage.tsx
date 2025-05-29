@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getJobById, deleteJob } from '../services/job.service'
@@ -38,7 +38,12 @@ export const JobDetailsPage = () => {
       await deleteJob(jobToDelete)
       queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
-      navigate('/my-jobs')
+      navigate('/my-jobs', {
+        state: {
+          from: location.pathname,
+          jobDeleted: true
+        }
+      })
     } catch (error) {
       toast.error('Failed to delete job')
     } finally {
@@ -94,7 +99,7 @@ export const JobDetailsPage = () => {
                                 </p>
                             </div>
                             
-                            {job.hasApplications ? (
+                            {job.hasApplications && job.status !== "In-Progress" ? (
                                 <div className="mt-8 flex justify-center">
                                     <button 
                                         onClick={() => navigate(`/applications/by-job/${job.id}`)}
@@ -130,7 +135,7 @@ export const JobDetailsPage = () => {
                             </div>
                         </div>
 
-                        {job.status === "in-progress" && (
+                        {job.status === "In-Progress" && (
                             <div className="mt-8 flex justify-center">
                                 <button 
                                     onClick={() => setIsModalOpen(true)}

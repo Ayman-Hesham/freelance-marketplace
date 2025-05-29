@@ -20,7 +20,7 @@ const jobSchema = new mongoose.Schema<IJob>({
     },
     status: {
         type: String,
-        enum: ['Open', 'In Progress', 'Pending Approval', 'Completed'],
+        enum: ['Open', 'In-Progress', 'Pending Approval', 'Completed'],
         default: 'Open'
     },
     clientId: {
