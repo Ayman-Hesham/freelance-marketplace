@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AcceptApplicationResponse, ApplicationByJobIdResponse, ApplicationsByFreelancerIdResponse, CreateApplicationResponse } from '../types/application.types';
+import { AcceptApplicationResponse, ApplicationByJobIdResponse, ApplicationsByFreelancerIdResponse, CreateApplicationResponse, LastApplicationResponse } from '../types/application.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
@@ -44,6 +44,15 @@ export const getApplicationsByJobId = async (jobId: string): Promise<Application
 export const acceptApplication = async (applicationId: string): Promise<AcceptApplicationResponse> => {
     try {
         const response = await apiClient.put(`/applications/${applicationId}`, { status: 'In-Progress' });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const getLastApplication = async (freelancerId: string): Promise<LastApplicationResponse> => {
+    try {
+        const response = await apiClient.get(`/applications/last/${freelancerId}`);
         return response.data;
     } catch (error) {
         return handleApiError(error);

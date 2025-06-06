@@ -6,7 +6,9 @@ import { database } from './configs/database';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { initializeSocket } from './services/socket.service';
 
 dotenv.config();
 
@@ -30,11 +32,16 @@ app.use('/api', routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+const httpServer = createServer(app);
+const io = initializeSocket(httpServer);
+app.set('io', io);
+
 const startServer = async () => {
   try {
     await database.connect();
-    app.listen(port);
-    console.log(`Server running on port ${port}`);
+    httpServer.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

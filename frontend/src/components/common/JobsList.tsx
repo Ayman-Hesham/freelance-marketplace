@@ -1,6 +1,6 @@
-import { JobCard } from '../components/JobCard';
-import { Job } from '../types/job.types';
-import { Application } from '../types/application.types';
+import { JobCard } from './JobCard';
+import { Job } from '../../types/job.types';
+import { Application } from '../../types/application.types';
 import { useLocation } from 'react-router-dom';
 
 interface Props {

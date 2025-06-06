@@ -1,6 +1,6 @@
 import _React from 'react';
 import { Search, Clock, Shield, Users, ArrowRight } from 'lucide-react';
-import { FeatureCard } from '../components/FeatureCard';
+import { FeatureCard } from '../../components/common/FeatureCard';
 import { Link } from 'react-router-dom';
 
 export const LandingPage = () => {

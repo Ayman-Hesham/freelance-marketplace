@@ -1,14 +1,16 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
+import { PulseLoader } from 'react-spinners'
 
 interface AcceptApplicationDialogProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
   freelancerName?: string
+  isLoading?: boolean
 }
 
-export function AcceptApplicationDialog({ isOpen, onClose, onConfirm, freelancerName }: AcceptApplicationDialogProps) {
+export function AcceptApplicationDialog({ isOpen, onClose, onConfirm, freelancerName, isLoading }: AcceptApplicationDialogProps) {
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
@@ -35,8 +37,13 @@ export function AcceptApplicationDialog({ isOpen, onClose, onConfirm, freelancer
             <button
               onClick={onConfirm}
               className="px-4 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600"
+              disabled={isLoading}
             >
-              Accept
+              {isLoading ? (
+                <PulseLoader color="#fff" size={8} />
+              ) : (
+                'Accept'
+              )}
             </button>
           </div>
 

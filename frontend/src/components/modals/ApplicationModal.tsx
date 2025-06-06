@@ -1,13 +1,13 @@
 import { useForm } from "react-hook-form"
-import { CreateApplicationRequest } from "../types/application.types"
-import { useState, useRef } from "react"
+import { CreateApplicationRequest } from "../../types/application.types"
+import { useState, useRef, useEffect } from "react"
 import { PulseLoader } from "react-spinners"
-import { createApplication } from "../services/application.service"
+import { createApplication, getLastApplication } from "../../services/application.service"
 import { Trash2, Upload } from "lucide-react"
 import { useParams } from 'react-router-dom'
-import { useQueryClient } from "@tanstack/react-query"
-import { useAuth } from "../context/AuthContext"
-import { Job } from "../types/job.types"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAuth } from "../../context/AuthContext"
+import { Job } from "../../types/job.types"
 
 interface Props {
     onClose: (wasCreated?: boolean) => void
@@ -20,9 +20,41 @@ const ApplicationModal = ({ onClose }: Props) => {
     const [portfolioFileName, setPortfolioFileName] = useState<string | null>(null)
     const [portfolioError, setPortfolioError] = useState<string | null>(null)
     const portfolioInputRef = useRef<HTMLInputElement>(null)
-    const { register, handleSubmit, formState: { errors } } = useForm<CreateApplicationRequest>()
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<CreateApplicationRequest>()
     const queryClient = useQueryClient()
     const { user } = useAuth()
+
+    const { data: lastApplication, isLoading: isLoadingLastApplication } = useQuery({
+        queryKey: ['lastApplication', user?.id],
+        queryFn: () => getLastApplication(user?.id || ''),
+        enabled: !!user?.id,
+    })
+
+    useEffect(() => {
+        if (lastApplication && ('coverLetter' in lastApplication)) {
+            if (lastApplication.coverLetter) {
+                setValue('coverLetter', lastApplication.coverLetter)
+            }
+
+            if (lastApplication.portfolio) {
+                fetch(lastApplication.portfolio)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const urlParts = lastApplication.portfolio.split('/')
+                        const fileNameWithParams = urlParts[urlParts.length - 1]
+                        const fileName = fileNameWithParams.split('?')[0]
+                        const originalFileName = fileName.split('__')[1]
+
+                        if (originalFileName) {
+                            const file = new File([blob], originalFileName, { type: blob.type })
+                            setPortfolioFile(file)
+                            setPortfolioFileName(originalFileName)
+                        }
+                    })
+                    .catch(error => console.error('Error fetching portfolio file:', error))
+            }
+        }
+    }, [lastApplication, setValue])
 
     const validateFileSize = (file: File, maxSize: number, errorMessage: string): boolean => {
         if (file.size > maxSize) {
@@ -184,7 +216,7 @@ const ApplicationModal = ({ onClose }: Props) => {
                             className="flex items-center justify-center bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:bg-white disabled:cursor-not-allowed min-w-[120px]"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? (
+                            {isSubmitting || isLoadingLastApplication ? (
                                 <PulseLoader color="#222E50" size={10} />
                             ) : (
                                 'Submit'

@@ -8,6 +8,7 @@ export interface IUser extends mongoose.Document {
     avatar?: string | null;
     bio?: string | null;
     portfolio?: string | null;
+    sentiment: string;
 }
 
 export interface IJob extends mongoose.Document {
@@ -31,3 +32,21 @@ export interface IApplication extends mongoose.Document {
     deliveryMessage?: string;
     correctionMessage?: string;
 }
+
+export interface IConversation extends mongoose.Document {
+    jobId: mongoose.Types.ObjectId | IJob;
+    clientId: mongoose.Types.ObjectId | IUser;
+    freelancerId: mongoose.Types.ObjectId | IUser;
+    messages: mongoose.Types.ObjectId[] | IMessage[];
+    lastMessageAt: Date;
+    status: string;
+}
+
+export interface IMessage extends mongoose.Document {
+    conversationId: mongoose.Types.ObjectId | IConversation;
+    senderId: mongoose.Types.ObjectId | IUser;
+    content: string;
+    read: boolean;
+}
+
+

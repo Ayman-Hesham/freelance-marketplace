@@ -1,8 +1,8 @@
 import _React, { useState, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
-import { Avatar } from '../../components/Avatar';
+import { Avatar } from '../../components/common/Avatar';
 import { useAuth } from '../../context/AuthContext';
-import { EditProfileModal } from '../../components/EditProfileModal';
+import { EditProfileModal } from '../../components/modals/EditProfileModal';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from 'react-spinners/PulseLoader';
 
@@ -103,7 +103,7 @@ export const FreelancerProfile = () => {
             >
               {isLoading ? (
                 <PulseLoader
-                  color="#ffffff"
+                  color="#222E50"
                   size={10}
                 />
               ) : (

@@ -3,9 +3,9 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useParams, useLocation, useNavigate } from "react-router-dom"
 import { ApplicationByJobIdResponse, ApplicationsResponse } from "../../types/application.types"
 import { PulseLoader } from "react-spinners"
-import { JobsList } from "../../components/JobsList"
+import { JobsList } from "../../components/common/JobsList"
 import { useState } from "react"
-import { AcceptApplicationDialog } from "../../components/AcceptApplicationDialog"
+import { AcceptApplicationDialog } from "../../components/dialogs/AcceptApplicationDialog"
 import { acceptApplication } from "../../services/application.service"
 import { toast } from "react-toastify"
 import { useAuth } from "../../context/AuthContext"
@@ -18,6 +18,7 @@ const ApplicationDetailsPage = () => {
     const jobId = location.state?.jobId
     const { user } = useAuth()
     const [applicationToAccept, setApplicationToAccept] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState(false)
 
     const handleAcceptClick = (applicationId: string) => {
         setApplicationToAccept(applicationId)
@@ -26,10 +27,16 @@ const ApplicationDetailsPage = () => {
     const handleAcceptApplication = async () => {
         if (!applicationId) return;
 
+        setIsLoading(true)
+
         try {
             const response = await acceptApplication(applicationId);
             
-            if (response) {
+            if ('status' in response) {
+                navigate('/my-jobs', {
+                    state: { ApplicationAccepted: false }
+                });
+            } else {
                 await Promise.all([
                     queryClient.invalidateQueries({ queryKey: ['job', jobId] }),
                     queryClient.invalidateQueries({ queryKey: ['applications', 'job', jobId] }),
@@ -49,7 +56,7 @@ const ApplicationDetailsPage = () => {
         }
     }
 
-    const { data: application, isLoading } = useQuery({
+    const { data: application, isLoading: isApplicationLoading } = useQuery({
         queryKey: ['application', jobId, applicationId],
         queryFn: () => {
             const cachedApplications = queryClient.getQueryData<ApplicationByJobIdResponse>(
@@ -79,7 +86,7 @@ const ApplicationDetailsPage = () => {
         return data && 'applications' in data && Array.isArray(data.applications)
     }
 
-    if (isLoading) return (
+    if (isApplicationLoading) return (
         <div className="h-screen flex items-center justify-center">
           <PulseLoader color="#222E50"/>
         </div>
@@ -122,6 +129,7 @@ const ApplicationDetailsPage = () => {
                     onClose={() => setApplicationToAccept(null)}
                     onConfirm={handleAcceptApplication}
                     freelancerName={application?.poster.name}
+                    isLoading={isLoading}
                 />
             )}
         </div>

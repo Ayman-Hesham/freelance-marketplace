@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
+import { IMessage } from '../types/model.types';
 
-const messageSchema = new mongoose.Schema({
+const messageSchema = new mongoose.Schema<IMessage>({
   conversationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Conversation',
@@ -21,7 +22,16 @@ const messageSchema = new mongoose.Schema({
     default: false
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false,
+  toJSON: { 
+    virtuals: true,
+    transform: function(doc: any, ret: any) {
+      delete ret._id;
+      return ret;
+    }
+  },
+  toObject: { virtuals: true }
 });
 
 messageSchema.index({ conversationId: 1, createdAt: 1 });

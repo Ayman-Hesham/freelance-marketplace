@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getJobById, deleteJob } from '../services/job.service'
+import { getJobById, deleteJob } from '../../services/job.service'
 import { PulseLoader } from 'react-spinners'
-import { Job, GetJobByIdResponse } from '../types/job.types'
-import { useAuth } from '../context/AuthContext'
-import { JobsList } from '../components/JobsList'
-import { DeleteJobDialog } from '../components/DeleteJobDialog'
+import { Job, GetJobByIdResponse } from '../../types/job.types'
+import { useAuth } from '../../context/AuthContext'
+import { JobsList } from '../../components/common/JobsList'
+import { DeleteJobDialog } from '../../components/dialogs/DeleteJobDialog'
 import { toast } from 'react-toastify'
-import ApplicationModal from '../components/ApplicationModal'
+import ApplicationModal from '../../components/modals/ApplicationModal'
 
 
 export const JobDetailsPage = () => {
@@ -99,7 +99,7 @@ export const JobDetailsPage = () => {
                                 </p>
                             </div>
                             
-                            {job.hasApplications && job.status !== "In-Progress" ? (
+                            {job.status === "Open" && job.hasApplications ? (
                                 <div className="mt-8 flex justify-center">
                                     <button 
                                         onClick={() => navigate(`/applications/by-job/${job.id}`)}
@@ -108,7 +108,7 @@ export const JobDetailsPage = () => {
                                         Applications
                                     </button>
                                 </div>
-                            ) : (
+                            ) : job.status === "Open" ? (
                                 <div className="mt-8 flex justify-center">
                                     <button 
                                         onClick={() => handleDeleteClick(job.id!)}
@@ -117,7 +117,7 @@ export const JobDetailsPage = () => {
                                         Delete
                                     </button>
                                 </div>
-                            )}
+                            ) : null}
                         </div>
                     </>
                 ) : isApplication ? (

@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getApplicationsByJobId } from '../../services/application.service'
 import { PulseLoader } from 'react-spinners'
-import { JobsList } from '../../components/JobsList'
+import { JobsList } from '../../components/common/JobsList'
 import { ApplicationByJobIdResponse, ApplicationsResponse } from '../../types/application.types'
 
 const JobApplicationsPage = () => {

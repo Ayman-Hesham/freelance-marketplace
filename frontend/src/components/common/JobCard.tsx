@@ -1,6 +1,7 @@
 import _React from 'react';
 import { Avatar } from './Avatar';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { getStatusTextColor } from '../../utils/status.styles';
 
 interface JobCardProps {
   id?: string;
@@ -98,7 +99,7 @@ export const JobCard = ({
               <div>Delivery time: {deliveryTime} days</div>
               {status && (!fromAllJobsPage || inApplicationsPage) && (
                 <div>
-                  Status: {status}
+                  Status: <span className={`font-medium ${getStatusTextColor(status)}`}>{status}</span>
                 </div>
               )}
               <span>

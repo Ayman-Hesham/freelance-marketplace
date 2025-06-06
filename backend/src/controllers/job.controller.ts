@@ -23,7 +23,7 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
 
 export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
-    const isApplication = req.query.isApplication === 'true';
+    const isApplication = req.query.isApplication;
 
     const job = await Job.findById(id).populate('clientId', 'name avatar')
     .populate('applications');
@@ -57,11 +57,11 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         description: job.description,
         budget: job.budget,
         deliveryTime: job.deliveryTime,
-        status: applicationStatus,
+        status: applicationStatus ? applicationStatus : job.status,
         hasApplications: job.applications.length > 0,
         hasApplied: hasApplied,
         poster: {
-            id: (job.clientId as any)._id,
+            id: (job.clientId as any).id,
             name: (job.clientId as any).name,
             avatarUrl
         }

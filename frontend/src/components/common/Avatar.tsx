@@ -1,13 +1,13 @@
 import * as RadixAvatar from '@radix-ui/react-avatar';
-import { AvatarProps } from '../types/auth.types';
+import { AvatarProps } from '../../types/auth.types';
 
-export function Avatar({ 
+export const Avatar = ({ 
   src, 
   alt = 'Avatar', 
   fallbackText = 'US', 
   className = '',
   size = 'default'
-}: AvatarProps) {
+}: AvatarProps) => {
   const sizeClasses = {
     default: 'w-12 h-12',
     large: 'w-32 h-32',   

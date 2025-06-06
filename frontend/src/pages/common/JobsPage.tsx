@@ -1,10 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { FilterCard } from '../components/FilterCard';
-import { JobsList } from '../components/JobsList';
+import { FilterCard } from '../../components/common/FilterCard';
+import { JobsList } from '../../components/common/JobsList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getJobs, filterJobs, searchJobs } from '../services/job.service';
-import { GetJobsResponse, JobResponse } from '../types/job.types';
+import { getJobs, filterJobs, searchJobs } from '../../services/job.service';
+import { GetJobsResponse, JobResponse } from '../../types/job.types';
 import { PulseLoader } from 'react-spinners';
 import { X } from "lucide-react";
 

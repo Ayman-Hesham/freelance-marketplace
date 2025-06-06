@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema<IUser>({
     },
     role: {
         type: String,
-        enum: ['client', 'freelancer'],
+        enum: ['client', 'freelancer', 'admin'],
         default: 'client',
     },
     avatar: {
@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema<IUser>({
     portfolio: {
         type: String,
         default: null
+    },
+    sentiment: {
+        type: String,
+        enum: ['1', '2', '3', '4', '5'],
+        default: '5'
     }
 }, {
     timestamps: true,

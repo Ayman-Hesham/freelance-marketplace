@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
+import { IConversation } from '../types/model.types';
 
-const conversationSchema = new mongoose.Schema({
+const conversationSchema = new mongoose.Schema<IConversation>({
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
@@ -31,11 +32,19 @@ const conversationSchema = new mongoose.Schema({
     default: 'active'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false,
+  toJSON: { 
+    virtuals: true,
+    transform: function(doc: any, ret: any) {
+      delete ret._id;
+      return ret;
+    }
+  },
+  toObject: { virtuals: true }
 });
 
 conversationSchema.index({ clientId: 1, updatedAt: -1 });
 conversationSchema.index({ freelancerId: 1, updatedAt: -1 });
-conversationSchema.index({ jobId: 1 });
 
 export default mongoose.model('Conversation', conversationSchema);

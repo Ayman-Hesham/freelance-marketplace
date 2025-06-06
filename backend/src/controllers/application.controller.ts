@@ -6,14 +6,13 @@ import { getSignedDownloadUrl, uploadToS3, deleteFromS3 } from '../services/s3.s
 import Job from '../models/job.model';
 import { v4 as uuidv4 } from 'uuid';
 import multer from 'multer';
-import { IApplication, IJob } from '../types/model.types';
 import mongoose from 'mongoose';
+import Conversation from '../models/conversation.model';
 
-// Add multer configuration at the top of the file
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 16 * 1024 * 1024, // 16MB limit
+    fileSize: 16 * 1024 * 1024, 
   }
 }).fields([
   { name: 'portfolio', maxCount: 1 }
@@ -184,7 +183,7 @@ export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, r
     session.startTransaction();
 
     try {
-        const application = await Application.findById(id);
+        const application = await Application.findById(id).session(session);
 
         if (!application) {
             const error: ErrorWithStatus = new Error('Application not found');
@@ -201,18 +200,33 @@ export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, r
                     jobId: application.jobId,
                     _id: { $ne: id }
                 },
-                { status: 'Rejected' },
+                { status: 'Not Selected' },
                 { session }
             );
 
-            await Job.findByIdAndUpdate(
+            const job = await Job.findByIdAndUpdate(
                 application.jobId,
                 { 
-                    status: 'In Progress',
+                    status: 'In-Progress',
                     freelancerId: application.freelancerId 
                 },
-                { session }
+                { 
+                    session,
+                    new: true
+                }
             );
+
+            if (!job) {
+                const error: ErrorWithStatus = new Error('Job not found');
+                error.status = 404;
+                throw error;
+            }
+
+            await Conversation.create([{
+                jobId: new mongoose.Types.ObjectId(application.jobId.toString()),
+                clientId: new mongoose.Types.ObjectId(job.clientId.toString()),
+                freelancerId: new mongoose.Types.ObjectId(application.freelancerId.toString())
+            }], { session });
         }
 
         await session.commitTransaction();
@@ -223,6 +237,39 @@ export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, r
         await session.abortTransaction();
         throw error;
     } finally {
-        session.endSession();
+        await session.endSession();
     }
+});
+
+export const getLastApplication = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        const error: ErrorWithStatus = new Error('Invalid user ID format');
+        error.status = 400;
+        throw error;
+    }
+
+    const lastApplication = await Application.findOne({ 
+        freelancerId: id 
+    })
+    .select('coverLetter portfolio')
+    .sort({ createdAt: -1 });
+
+    if (!lastApplication) {
+        res.status(200).json({
+            message: "You haven't submitted any applications yet."
+        });
+        return;
+    }
+
+    let portfolioUrl = null;
+    if (lastApplication.portfolio) {
+        portfolioUrl = await getSignedDownloadUrl(lastApplication.portfolio);
+    }
+
+    res.status(200).json({
+        coverLetter: lastApplication.coverLetter,
+        portfolio: portfolioUrl
+    });
 });

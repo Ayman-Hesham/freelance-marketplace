@@ -36,3 +36,9 @@ export type ApplicationByJobIdResponse = ApplicationsResponse | ErrorResponse
 export type AcceptApplicationResponse = {
     message: string;
 } | ErrorResponse
+
+export type LastApplicationResponse = {
+    coverLetter: string;
+    portfolio: string;
+    message: string;
+} | ErrorResponse

@@ -4,12 +4,12 @@ import { getJobsByClientId, deleteJob } from '../../services/job.service'
 import { toast, ToastContainer } from 'react-toastify'
 import { Bounce } from 'react-toastify'
 import { Plus } from 'lucide-react'
-import { CreateJobModal } from '../../components/CreateJobModal'
-import { JobsList } from '../../components/JobsList'
+import { CreateJobModal } from '../../components/modals/CreateJobModal'
+import { JobsList } from '../../components/common/JobsList'
 import { useAuth } from '../../context/AuthContext'
 import { GetJobsResponse, JobResponse } from '../../types/job.types'
 import { PulseLoader } from 'react-spinners'
-import { DeleteJobDialog } from '../../components/DeleteJobDialog'
+import { DeleteJobDialog } from '../../components/dialogs/DeleteJobDialog'
 import { useLocation } from 'react-router-dom'
 
 export const ClientJobs = () => {
@@ -65,6 +65,9 @@ export const ClientJobs = () => {
   useEffect(() => {
     if (ApplicationAccepted) {
         toast.success('Application accepted successfully!')
+        window.history.replaceState({}, document.title)
+    } else if (ApplicationAccepted === false) {
+        toast.error('Error accepting application!')
         window.history.replaceState({}, document.title)
     }
     if (jobDeleted) {

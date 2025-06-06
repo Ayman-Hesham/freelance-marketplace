@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Upload, X, Trash2, Save } from 'lucide-react';
-import { Avatar } from './Avatar';
-import { User } from '../types/auth.types';
-import { ProfileFormData } from '../types/profile.types';
-import { useAuth } from '../context/AuthContext';
+import { Avatar } from '../common/Avatar';
+import { User } from '../../types/auth.types';
+import { ProfileFormData } from '../../types/profile.types';
+import { useAuth } from '../../context/AuthContext';
 import { PulseLoader } from 'react-spinners';
 
 interface EditProfileModalProps {
@@ -14,7 +14,7 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ user, onClose, userRole }: EditProfileModalProps) {
-  const { updateUser } = useAuth();
+  const { updateUser, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const portfolioInputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +115,7 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
   const handlePortfolioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const maxSize = 16 * 1024 * 1024; // 16MB in bytes
+      const maxSize = 16 * 1024 * 1024;
       
       if (!validateFileSize(file, maxSize, 'File size must be less than 16MB')) {
         event.target.value = '';
@@ -292,9 +292,9 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
               className="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed min-w-[120px]"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
+              {isSubmitting || isLoading ? (
                 <PulseLoader
-                  color="#ffffff"
+                  color="#222E50"
                   size={10}
                 />
               ) : (

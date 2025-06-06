@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, FileText, MessageSquare, User } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 import { useState } from 'react';
@@ -51,7 +51,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
 
-              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="Messages">
+              <Link to='/messages' data-tooltip-id="tooltip" data-tooltip-content="Messages">
                 <button className="text-white hover:text-secondary-500 transition">
                   <MessageSquare className="w-6 h-6" />
                 </button>
@@ -71,7 +71,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
 
-              <Link to='/' data-tooltip-id="tooltip" data-tooltip-content="Messages">
+              <Link to='/messages' data-tooltip-id="tooltip" data-tooltip-content="Messages">
                 <button className="text-white hover:text-secondary-500 transition">
                   <MessageSquare className="w-6 h-6" />
                 </button>

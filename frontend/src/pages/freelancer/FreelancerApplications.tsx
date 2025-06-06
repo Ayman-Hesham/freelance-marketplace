@@ -1,7 +1,7 @@
 import { ToastContainer, toast, Bounce } from 'react-toastify'
 import { useQuery } from '@tanstack/react-query'
 import { getApplicationsByFreelancerId } from '../../services/application.service'
-import { JobsList } from '../../components/JobsList'
+import { JobsList } from '../../components/common/JobsList'
 import { useAuth } from '../../context/AuthContext'
 import { JobResponse } from '../../types/job.types'
 import { ApplicationsByFreelancerIdResponse } from '../../types/application.types'
