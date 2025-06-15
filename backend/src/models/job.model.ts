@@ -20,7 +20,7 @@ const jobSchema = new mongoose.Schema<IJob>({
     },
     status: {
         type: String,
-        enum: ['Open', 'In-Progress', 'Pending Approval', 'Completed'],
+        enum: ['Open', 'In-Progress', 'Pending Approval', 'Correction', 'Completed'],
         default: 'Open'
     },
     clientId: {
@@ -50,8 +50,8 @@ const jobSchema = new mongoose.Schema<IJob>({
     toObject: { virtuals: true }
 });
 
+jobSchema.index({ title: 'text' });
 jobSchema.index({ createdAt: -1 });
-jobSchema.index({ title: 1 });
 
 jobSchema.pre('findOneAndUpdate', function() {
     this.set({ updatedAt: new Date() });

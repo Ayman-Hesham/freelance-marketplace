@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMessage } from '../../context/MessageContext';
+import { useMessage } from '../../hooks/useMessage';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChatHeader } from '../../components/common/Messaging/ChatHeader';
 import { MessagesList } from '../../components/common/Messaging/MessagesList';
@@ -8,9 +8,10 @@ import { EmptyState } from '../../components/common/Messaging/EmptyState';
 import { ConversationsList } from '../../components/common/Messaging/ConversationsList';
 import { Conversation, getConversationsResponse } from '../../types/conversation.types';
 import { getConversations } from '../../services/conversation.service';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { getMessages } from '../../services/message.service';
 import { Message } from '../../types/message.types';
+import { useUnreadCount } from '../../hooks/useUnreadCount';
 
 export const MessagesPage = () => {
   const { 
@@ -20,9 +21,11 @@ export const MessagesPage = () => {
     typingUsers,
     joinConversation, 
     leaveConversation, 
-    sendMessage: sendSocketMessage 
+    sendMessage: sendSocketMessage,
+    setCurrentConversationId
   } = useMessage();
   
+  const { resetUnreadCount } = useUnreadCount();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -49,12 +52,80 @@ export const MessagesPage = () => {
       return response;
     },
     enabled: !!selectedConversation?.id,
-    staleTime: Infinity,
+    staleTime: 0,
     gcTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true
   });
+
+  useEffect(() => {
+    setCurrentConversationId(selectedConversation?.id || null);
+    
+    return () => {
+      setCurrentConversationId(null);
+    };
+  }, [selectedConversation, setCurrentConversationId]);
+
+  useEffect(() => {
+    if (socket && selectedConversation) {
+      socket.emit('mark-messages-read', { conversationId: selectedConversation.id });
+      resetUnreadCount();
+    }
+  }, [socket, selectedConversation, resetUnreadCount]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveMessage = (message: Message) => {
+      // Update messages list
+      queryClient.setQueryData(
+        ['messages', message.conversationId],
+        (oldMessages: Message[] = []) => {
+          if (oldMessages?.some(m => m.id === message.id)) return oldMessages;
+          return [...(oldMessages || []), message];
+        }
+      );
+
+      // Invalidate conversations query to refresh last messages
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+
+      // Scroll to bottom after message is added
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+
+      // Add this to update unread count
+      resetUnreadCount();
+    };
+
+    const handleMessageSent = (data: { messageId: string, message: Message }) => {
+      const { messageId, message } = data;
+      
+      // Update messages cache
+      queryClient.setQueryData(
+        ['messages', message.conversationId],
+        (oldMessages: Message[] = []) => 
+          oldMessages?.map(msg => msg.id === messageId ? message : msg) || []
+      );
+
+      // Invalidate conversations query to refresh last messages
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+
+      // Scroll to bottom after message is sent
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    };
+
+    socket.on('receive-message', handleReceiveMessage);
+    socket.on('message-sent', handleMessageSent);
+
+    return () => {
+      socket.off('receive-message', handleReceiveMessage);
+      socket.off('message-sent', handleMessageSent);
+    };
+  }, [socket, queryClient, user, resetUnreadCount]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -66,44 +137,16 @@ export const MessagesPage = () => {
         leaveConversation(selectedConversation.id);
       }
     };
-  }, [selectedConversation]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('receive-message', (message) => {
-        const currentMessages = queryClient.getQueryData<Message[]>(['messages', message.conversationId]) || [];
-        
-        queryClient.setQueryData(['messages', message.conversationId], [...currentMessages, message]);
-
-        queryClient.invalidateQueries({ 
-          queryKey: ['messages', message.conversationId],
-          exact: true 
-        });
-
-        queryClient.invalidateQueries({ 
-          queryKey: ['conversations'],
-          exact: true 
-        });
-      });
-
-      socket.on('messages-read', ({ conversationId }) => {
-        if (conversationId === selectedConversation?.id) {
-          queryClient.invalidateQueries({ 
-            queryKey: ['messages', conversationId], 
-            exact: true 
-          });
-        }
-      });
-    }
-  }, [socket, queryClient, selectedConversation]);
+  }, [selectedConversation, joinConversation, leaveConversation]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedConversation || !user) return;
 
     const conversationId = selectedConversation.id;
+    const messageId = `temp-${Date.now()}`;
     
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
+    const optimisticMessage = {
+      id: messageId,
       conversationId,
       senderId: {
         id: user.id,
@@ -113,22 +156,38 @@ export const MessagesPage = () => {
       content,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      read: false,
+      read: true,
       status: 'sending'
     };
 
-    await queryClient.cancelQueries({ 
-      queryKey: ['messages', conversationId] 
-    });
-
-    const previousMessages = queryClient.getQueryData<Message[]>(['messages', conversationId]) || [];
-
-    queryClient.setQueryData(['messages', conversationId], [...previousMessages, optimisticMessage]);
+    // Add optimistic update
+    queryClient.setQueryData(
+      ['messages', conversationId],
+      (old: Message[] = []) => [...old, optimisticMessage]
+    );
 
     try {
       await sendSocketMessage(conversationId, content);
+      
+      // Update message status to sent
+      queryClient.setQueryData(
+        ['messages', conversationId],
+        (old: Message[] = []) => old.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status: 'sent' }
+            : msg
+        )
+      );
     } catch (error) {
-      queryClient.setQueryData(['messages', conversationId], previousMessages);
+      // Update message status to failed or remove it
+      queryClient.setQueryData(
+        ['messages', conversationId],
+        (old: Message[] = []) => old.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status: 'failed' }
+            : msg
+        )
+      );
     }
   };
 
@@ -142,6 +201,16 @@ export const MessagesPage = () => {
   const isOtherUserTyping = selectedConversation 
     ? typingUsers.get(selectedConversation.id)?.has(otherUser?.id || '') || false
     : false;
+
+  // Add this function to handle scrolling
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Scroll when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]); // Dependency on messages array
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-100 px-4 md:px-8 py-4 -mt-4">

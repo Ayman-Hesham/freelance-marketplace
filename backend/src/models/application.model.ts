@@ -29,10 +29,6 @@ const applicationSchema = new mongoose.Schema<IApplication>({
         type: String,
         default: null
     },
-    deliveryMessage: {
-        type: String,
-        default: null
-    },
     correctionMessage: {
         type: String,
         default: null
@@ -42,6 +38,7 @@ const applicationSchema = new mongoose.Schema<IApplication>({
 });
 
 applicationSchema.index({ createdAt: 1 });
+applicationSchema.index({ jobId: 1, freelancerId: 1 }, { unique: true });
 
 applicationSchema.pre('findOneAndUpdate', function() {
     this.set({ updatedAt: new Date() });

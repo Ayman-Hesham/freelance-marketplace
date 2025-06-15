@@ -1,15 +1,19 @@
 import React from 'react';
 import { Search, FileText, MessageSquare, User } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 import { useState } from 'react';
-
+import { useUnreadCount } from '../../hooks/useUnreadCount';
+import { useMessageNotifications } from '../../hooks/useMessageNotifications';
 
 type Props = {}
 
 export const Navbar = (_props: Props) => {
  const {user} = useAuth();
+ const { unreadCount } = useUnreadCount();
+ useMessageNotifications();
+ 
  const navigate = useNavigate();
  const [searchParams] = useSearchParams();
  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -19,6 +23,21 @@ export const Navbar = (_props: Props) => {
      navigate(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
    }
  };
+
+ const MessageIcon = () => (
+   <Link to='/messages' data-tooltip-id="tooltip" data-tooltip-content="Messages">
+     <div className="relative">
+       <button className="text-white hover:text-secondary-500 transition">
+         <MessageSquare className="w-6 h-6" />
+       </button>
+       {unreadCount > 0 && !window.location.pathname.includes('/messages') && (
+         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+           {unreadCount > 99 ? '99+' : unreadCount}
+         </span>
+       )}
+     </div>
+   </Link>
+ );
 
   return (
     <nav className="bg-primary-500 py-3">
@@ -51,11 +70,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
 
-              <Link to='/messages' data-tooltip-id="tooltip" data-tooltip-content="Messages">
-                <button className="text-white hover:text-secondary-500 transition">
-                  <MessageSquare className="w-6 h-6" />
-                </button>
-              </Link>
+              <MessageIcon />
 
               <Link to='/client-profile' data-tooltip-id="tooltip" data-tooltip-content="Profile">
                 <button className="text-white hover:text-secondary-500 transition">
@@ -71,11 +86,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
 
-              <Link to='/messages' data-tooltip-id="tooltip" data-tooltip-content="Messages">
-                <button className="text-white hover:text-secondary-500 transition">
-                  <MessageSquare className="w-6 h-6" />
-                </button>
-              </Link>
+              <MessageIcon />
 
               <Link to='/freelancer-profile' data-tooltip-id="tooltip" data-tooltip-content="Profile">
                 <button className="text-white hover:text-secondary-500 transition">

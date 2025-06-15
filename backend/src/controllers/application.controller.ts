@@ -15,7 +15,8 @@ const upload = multer({
     fileSize: 16 * 1024 * 1024, 
   }
 }).fields([
-  { name: 'portfolio', maxCount: 1 }
+  { name: 'portfolio', maxCount: 1 },
+  { name: 'deliverable', maxCount: 1 }
 ]);
 
 export const createApplication = asyncHandler(async (req: Request, res: Response) => {
@@ -175,9 +176,8 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
     });
 });
 
-export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, res: Response) => {
+export const acceptApplication = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { status } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -191,43 +191,41 @@ export const updateApplicationAndJobStatus = asyncHandler(async (req: Request, r
             throw error;
         }
 
-        if (status === 'In-Progress') {
-            application.status = 'In-Progress';
-            await application.save({ session });
+        application.status = 'In-Progress';
+        await application.save({ session });
 
-            await Application.updateMany(
-                { 
-                    jobId: application.jobId,
-                    _id: { $ne: id }
-                },
-                { status: 'Not Selected' },
-                { session }
-            );
+        await Application.updateMany(
+            { 
+                jobId: application.jobId,
+                _id: { $ne: id }
+            },
+            { status: 'Not Selected' },
+            { session }
+        );
 
-            const job = await Job.findByIdAndUpdate(
-                application.jobId,
-                { 
-                    status: 'In-Progress',
-                    freelancerId: application.freelancerId 
-                },
-                { 
-                    session,
-                    new: true
-                }
-            );
-
-            if (!job) {
-                const error: ErrorWithStatus = new Error('Job not found');
-                error.status = 404;
-                throw error;
+        const job = await Job.findByIdAndUpdate(
+            application.jobId,
+            { 
+                status: 'In-Progress',
+                freelancerId: application.freelancerId 
+            },
+            { 
+                session,
+                new: true
             }
+        );
 
-            await Conversation.create([{
-                jobId: new mongoose.Types.ObjectId(application.jobId.toString()),
-                clientId: new mongoose.Types.ObjectId(job.clientId.toString()),
-                freelancerId: new mongoose.Types.ObjectId(application.freelancerId.toString())
-            }], { session });
+        if (!job) {
+            const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
         }
+
+        await Conversation.create([{
+            jobId: new mongoose.Types.ObjectId(application.jobId.toString()),
+            clientId: new mongoose.Types.ObjectId(job.clientId.toString()),
+            freelancerId: new mongoose.Types.ObjectId(application.freelancerId.toString())
+        }], { session });
 
         await session.commitTransaction();
         res.status(200).json({
@@ -272,4 +270,77 @@ export const getLastApplication = asyncHandler(async (req: Request, res: Respons
         coverLetter: lastApplication.coverLetter,
         portfolio: portfolioUrl
     });
+});
+
+export const submitDeliverable = asyncHandler(async (req: Request, res: Response) => {
+    const handleMulterUpload = () => {
+        return new Promise((resolve, reject) => {
+            upload(req, res, (err) => {
+                if (err) reject(err);
+                resolve(true);
+            });
+        });
+    };
+
+    await handleMulterUpload();
+
+    const { id } = req.params;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const deliverableFile = files?.deliverable?.[0];
+
+    if (!deliverableFile) {
+        const error: ErrorWithStatus = new Error('Deliverable file is required');
+        error.status = 400;
+        throw error;
+    }
+
+    const freelancerId = req.user?.id;
+
+    let deliverableKey = null;
+    if (deliverableFile) {
+        deliverableKey = `deliverables/${freelancerId}/${uuidv4()}__${deliverableFile.originalname}`;
+        await uploadToS3(deliverableFile.buffer, deliverableKey, deliverableFile.mimetype);
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const job = await Job.findByIdAndUpdate(
+            new mongoose.Types.ObjectId(id),
+            { 
+                status: 'Pending Approval',
+            },
+            {  
+                session,
+                new: true
+            }
+        );
+
+        if (!job) {
+            const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
+        }
+
+        const application = await Application.findOne({ jobId: job._id, freelancerId }).session(session);
+
+        if (!application) {
+            const error: ErrorWithStatus = new Error('Application not found');
+            error.status = 404;
+            throw error;
+        }
+
+        application.deliveredWork = deliverableKey!;
+        application.status = 'Pending Approval';
+        await application.save({ session });
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Deliverable submitted successfully' });
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
+    }
 });

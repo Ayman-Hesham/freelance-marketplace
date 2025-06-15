@@ -4,7 +4,7 @@ import { Upload, X, Trash2, Save } from 'lucide-react';
 import { Avatar } from '../common/Avatar';
 import { User } from '../../types/auth.types';
 import { ProfileFormData } from '../../types/profile.types';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { PulseLoader } from 'react-spinners';
 
 interface EditProfileModalProps {
@@ -225,7 +225,7 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
                     errors.bio ? "border-red-500" : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-32`}
                   {...register("bio", {
-                    maxLength: { value: 500, message: "Bio must be less than 500 characters" }
+                    maxLength: { value: 1000, message: "Bio must be less than 1000 characters" }
                   })}
                   disabled={isSubmitting}
                 />

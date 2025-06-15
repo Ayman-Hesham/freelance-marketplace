@@ -1,6 +1,6 @@
 import { Send } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useMessage } from '../../../context/MessageContext';
+import { useMessage } from '../../../hooks/useMessage';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;

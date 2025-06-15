@@ -30,6 +30,11 @@ const conversationSchema = new mongoose.Schema<IConversation>({
     type: String,
     enum: ['active', 'closed'],
     default: 'active'
+  },
+  unreadCount: {
+    type: Map,
+    of: Number,
+    default: new Map(),
   }
 }, {
   timestamps: true,

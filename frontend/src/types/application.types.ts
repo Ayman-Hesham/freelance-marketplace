@@ -42,3 +42,7 @@ export type LastApplicationResponse = {
     portfolio: string;
     message: string;
 } | ErrorResponse
+
+export type SubmitDeliverableResponse = {
+    message: string;
+} | ErrorResponse

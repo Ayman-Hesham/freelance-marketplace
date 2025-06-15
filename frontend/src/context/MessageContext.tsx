@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 interface MessageContextType {
   socket: Socket | null;
@@ -12,91 +12,103 @@ interface MessageContextType {
   sendMessage: (conversationId: string, content: string) => Promise<void>;
   startTyping: (conversationId: string) => void;
   stopTyping: (conversationId: string) => void;
+  unreadCount: number;
+  setCurrentConversationId: (id: string | null) => void;
+  currentConversationId: string | null;
+  handleLogout: () => void;
 }
 
-const MessageContext = createContext<MessageContextType | null>(null);
+export const MessageContext = createContext<MessageContextType | null>(null);
 
 export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(new Map());
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const { user } = useAuth();
 
   const connectSocket = useCallback(() => {
     if (!user || socket?.connected) return;
 
-    const newSocket = io('http://localhost:5000', {
-      transports: ['websocket'],
-      timeout: 20000,
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-      setReconnectAttempts(0);
-      console.log('Connected to socket server');
-    });
-
-    newSocket.on('disconnect', () => {
-      setIsConnected(false);
-      console.log('Disconnected from socket server');
-    });
-
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      setIsConnected(false);
-    });
-
-    newSocket.on('online-users', (users: string[]) => {
-      setOnlineUsers(new Set(users));
-    });
-
-    newSocket.on('user-online', ({ userId }) => {
-      setOnlineUsers(prev => new Set([...prev, userId]));
-    });
-
-    newSocket.on('user-offline', ({ userId }) => {
-      setOnlineUsers(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(userId);
-        return newSet;
+    try {
+      const newSocket = io('http://localhost:5000', {
+        transports: ['websocket'],
+        timeout: 20000,
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
-    });
 
-    newSocket.on('user-typing', ({ userId, conversationId }) => {
-      setTypingUsers(prev => {
-        const newMap = new Map(prev);
-        if (!newMap.has(conversationId)) {
-          newMap.set(conversationId, new Set());
-        }
-        newMap.get(conversationId)!.add(userId);
-        return newMap;
+      newSocket.on('connect', () => {
+        setIsConnected(true);
+        console.log('Connected to socket server');
       });
-    });
 
-    newSocket.on('user-stop-typing', ({ userId, conversationId }) => {
-      setTypingUsers(prev => {
-        const newMap = new Map(prev);
-        if (newMap.has(conversationId)) {
-          newMap.get(conversationId)!.delete(userId);
-          if (newMap.get(conversationId)!.size === 0) {
-            newMap.delete(conversationId);
+      newSocket.on('disconnect', () => {
+        setIsConnected(false);
+        console.log('Disconnected from socket server');
+      });
+
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        setIsConnected(false);
+        // Don't throw error - just log it
+      });
+
+      newSocket.on('online-users', (users: string[]) => {
+        setOnlineUsers(new Set(users));
+      });
+
+      newSocket.on('user-online', ({ userId }) => {
+        setOnlineUsers(prev => new Set([...prev, userId]));
+      });
+
+      newSocket.on('user-offline', ({ userId }) => {
+        setOnlineUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+      });
+
+      newSocket.on('user-typing', ({ userId, conversationId }) => {
+        setTypingUsers(prev => {
+          const newMap = new Map(prev);
+          if (!newMap.has(conversationId)) {
+            newMap.set(conversationId, new Set());
           }
-        }
-        return newMap;
+          newMap.get(conversationId)!.add(userId);
+          return newMap;
+        });
       });
-    });
 
-    setSocket(newSocket);
-  }, [user, reconnectAttempts]);
+      newSocket.on('user-stop-typing', ({ userId, conversationId }) => {
+        setTypingUsers(prev => {
+          const newMap = new Map(prev);
+          if (newMap.has(conversationId)) {
+            newMap.get(conversationId)!.delete(userId);
+            if (newMap.get(conversationId)!.size === 0) {
+              newMap.delete(conversationId);
+            }
+          }
+          return newMap;
+        });
+      });
+
+      setSocket(newSocket);
+    } catch (error) {
+      console.error('Failed to create socket connection:', error);
+      // Don't throw - let the app continue to work without socket
+    }
+  }, [user]); // Remove reconnectAttempts from dependencies
 
   useEffect(() => {
-    connectSocket();
+    if (user) {
+      connectSocket();
+    }
 
     return () => {
       if (socket) {
@@ -105,7 +117,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsConnected(false);
       }
     };
-  }, [connectSocket]);
+  }, [user]); // Simplified dependencies
 
   const joinConversation = useCallback((conversationId: string) => {
     if (socket && isConnected) {
@@ -120,44 +132,44 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [socket, isConnected]);
 
   const sendMessage = useCallback(async (conversationId: string, content: string): Promise<void> => {
+    if (!socket || !isConnected) {
+      throw new Error('Not connected');
+    }
+
     return new Promise((resolve, reject) => {
-      if (!socket || !isConnected) {
-        reject(new Error('Not connected'));
-        return;
-      }
-
-      const tempId = Date.now().toString();
+      const messageId = `temp-${Date.now()}`;
       
-      const timeout = setTimeout(() => {
-        reject(new Error('Message send timeout'));
-      }, 10000);
-
-      const messageHandler = (message: any) => {
-        if (message.content === content && message.conversationId === conversationId) {
-          clearTimeout(timeout);
-          socket.off('receive-message', messageHandler);
-          socket.off('message-error', errorHandler);
+      const handleSuccess = (data: { messageId: string }) => {
+        if (data.messageId === messageId) {
+          socket.off('message-sent', handleSuccess);
+          socket.off('message-error', handleError);
           resolve();
         }
       };
 
-      const errorHandler = (error: any) => {
-        if (error.tempId === tempId) {
-          clearTimeout(timeout);
-          socket.off('receive-message', messageHandler);
-          socket.off('message-error', errorHandler);
-          reject(new Error(error.error));
+      const handleError = (error: { messageId: string }) => {
+        if (error.messageId === messageId) {
+          socket.off('message-sent', handleSuccess);
+          socket.off('message-error', handleError);
+          reject(new Error('Failed to send message'));
         }
       };
 
-      socket.on('receive-message', messageHandler);
-      socket.on('message-error', errorHandler);
+      socket.on('message-sent', handleSuccess);
+      socket.on('message-error', handleError);
 
       socket.emit('send-message', {
         conversationId,
         content,
-        tempId
+        messageId
       });
+
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        socket.off('message-sent', handleSuccess);
+        socket.off('message-error', handleError);
+        reject(new Error('Message send timeout'));
+      }, 10000);
     });
   }, [socket, isConnected]);
 
@@ -173,6 +185,34 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [socket, isConnected]);
 
+  // Add logout handler
+  const handleLogout = useCallback(() => {
+    if (socket && isConnected) {
+      socket.emit('logout');
+      setSocket(null);
+      setIsConnected(false);
+      setOnlineUsers(new Set());
+      setTypingUsers(new Map());
+      setUnreadCount(0);
+      setCurrentConversationId(null);
+    }
+  }, [socket, isConnected]);
+
+  // Add this effect to handle auth state changes
+  useEffect(() => {
+    if (!user) {
+      handleLogout();
+    }
+  }, [user, handleLogout]);
+
+  // Update currentConversationId when viewing messages
+  useEffect(() => {
+    const isOnMessagesPage = window.location.pathname === '/messages';
+    if (!isOnMessagesPage) {
+      setCurrentConversationId(null);
+    }
+  }, []);
+
   return (
     <MessageContext.Provider value={{
       socket,
@@ -183,17 +223,13 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       leaveConversation,
       sendMessage,
       startTyping,
-      stopTyping
+      stopTyping,
+      unreadCount,
+      setCurrentConversationId,
+      currentConversationId,
+      handleLogout,
     }}>
       {children}
     </MessageContext.Provider>
   );
-};
-
-export const useMessage = () => {
-  const context = useContext(MessageContext);
-  if (!context) {
-    throw new Error('useMessage must be used within a MessageProvider');
-  }
-  return context;
 };

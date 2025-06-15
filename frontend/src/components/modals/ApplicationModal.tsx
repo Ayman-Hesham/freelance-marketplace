@@ -6,7 +6,7 @@ import { createApplication, getLastApplication } from "../../services/applicatio
 import { Trash2, Upload } from "lucide-react"
 import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useAuth } from "../../context/AuthContext"
+import { useAuth } from "../../hooks/useAuth"
 import { Job } from "../../types/job.types"
 
 interface Props {
@@ -148,7 +148,7 @@ const ApplicationModal = ({ onClose }: Props) => {
                                 errors.coverLetter ? "border-red-500" : "border-gray-300"
                             } focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-32`}
                             {...register("coverLetter", {
-                                maxLength: { value: 300, message: "Cover letter must be less than 300 characters" }
+                                maxLength: { value: 1000, message: "Cover letter must be less than 1000 characters" }
                             })}
                             disabled={isSubmitting}
                         />

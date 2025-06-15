@@ -2,7 +2,7 @@ import { ToastContainer, toast, Bounce } from 'react-toastify'
 import { useQuery } from '@tanstack/react-query'
 import { getApplicationsByFreelancerId } from '../../services/application.service'
 import { JobsList } from '../../components/common/JobsList'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { JobResponse } from '../../types/job.types'
 import { ApplicationsByFreelancerIdResponse } from '../../types/application.types'
 import { useLocation } from 'react-router-dom'
@@ -13,6 +13,7 @@ const FreelancerApplications = () => {
   const { user } = useAuth()
   const location = useLocation()
   const applicationSuccess = location.state?.applicationSuccess
+  const submitSuccess = location.state?.submitSuccess
 
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['applications', 'freelancer', user!.id],
@@ -27,6 +28,13 @@ const FreelancerApplications = () => {
         window.history.replaceState({}, document.title)
     }
   }, [applicationSuccess])
+
+  useEffect(() => {
+    if (submitSuccess) {
+        toast.success('Deliverable submitted successfully!')
+        window.history.replaceState({}, document.title)
+    }
+  }, [submitSuccess])
 
   const isJobResponse = (data: ApplicationsByFreelancerIdResponse): data is JobResponse => {
     return 'jobs' in data;

@@ -76,7 +76,7 @@ export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
               {...register("description", {
                 required: "Description is required",
                 minLength: { value: 150, message: "Description must be at least 150 characters" },
-                maxLength: { value: 300, message: "Description must be less than 300 characters" }
+                maxLength: { value: 1000, message: "Description must be less than 1000 characters" }
               })}
               disabled={isSubmitting}
             />

@@ -8,7 +8,7 @@ import { useState } from "react"
 import { AcceptApplicationDialog } from "../../components/dialogs/AcceptApplicationDialog"
 import { acceptApplication } from "../../services/application.service"
 import { toast } from "react-toastify"
-import { useAuth } from "../../context/AuthContext"
+import { useAuth } from "../../hooks/useAuth"
 
 const ApplicationDetailsPage = () => {
     const queryClient = useQueryClient()

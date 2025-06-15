@@ -97,14 +97,14 @@ export const JobCard = ({
             </h3>
             <div className="flex items-center gap-8">
               <div>Delivery time: {deliveryTime} days</div>
+              <span>
+                Budget: ${budget}
+              </span>
               {status && (!fromAllJobsPage || inApplicationsPage) && (
                 <div>
                   Status: <span className={`font-medium ${getStatusTextColor(status)}`}>{status}</span>
                 </div>
               )}
-              <span>
-                Budget: ${budget}
-              </span>
             </div>
           </div>
         )}

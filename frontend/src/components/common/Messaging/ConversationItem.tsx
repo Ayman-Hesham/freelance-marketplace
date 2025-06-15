@@ -1,7 +1,8 @@
 import { Conversation } from '../../../types/conversation.types';
 import { Avatar } from '../Avatar';
 import { formatMessageDate } from '../../../utils/date.utils';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../hooks/useAuth';
+import { useMessage } from '../../../hooks/useMessage';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -11,10 +12,14 @@ interface ConversationItemProps {
 
 export function ConversationItem({ conversation, isSelected, onSelect }: ConversationItemProps) {
   const { user } = useAuth();
+  const { currentConversationId } = useMessage();
   
   const otherUser = conversation.clientId.id === user?.id 
     ? conversation.freelancerId 
     : conversation.clientId;
+
+  const unreadCount = conversation.unreadCount?.[user?.id || ''] || 0;
+  const shouldShowUnread = unreadCount > 0 && conversation.id !== currentConversationId;
 
   const lastMessage = conversation.lastMessage?.[0];
   
@@ -46,9 +51,9 @@ export function ConversationItem({ conversation, isSelected, onSelect }: Convers
             <p className="text-sm text-gray-600 truncate">
               {lastMessage?.content || ''}
             </p>
-            {conversation.unreadCount > 0 && (
+            {shouldShowUnread && (
               <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-                {conversation.unreadCount}
+                {unreadCount}
               </span>
             )}
           </div>

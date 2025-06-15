@@ -17,10 +17,12 @@ export interface Conversation {
   jobId: Job;
   clientId: User;
   freelancerId: User;
-  unreadCount: number;
   lastMessage: Message[];
   lastMessageAt: string;
   status: 'active' | 'closed';
+  unreadCount: {
+    [userId: string]: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

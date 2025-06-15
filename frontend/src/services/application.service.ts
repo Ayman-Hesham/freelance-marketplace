@@ -1,5 +1,10 @@
 import axios from 'axios';
-import { AcceptApplicationResponse, ApplicationByJobIdResponse, ApplicationsByFreelancerIdResponse, CreateApplicationResponse, LastApplicationResponse } from '../types/application.types';
+import { AcceptApplicationResponse, 
+        ApplicationByJobIdResponse, 
+        ApplicationsByFreelancerIdResponse, 
+        CreateApplicationResponse, 
+        LastApplicationResponse, 
+        SubmitDeliverableResponse } from '../types/application.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
@@ -43,7 +48,7 @@ export const getApplicationsByJobId = async (jobId: string): Promise<Application
 
 export const acceptApplication = async (applicationId: string): Promise<AcceptApplicationResponse> => {
     try {
-        const response = await apiClient.put(`/applications/${applicationId}`, { status: 'In-Progress' });
+        const response = await apiClient.put(`/applications/${applicationId}/accept`);
         return response.data;
     } catch (error) {
         return handleApiError(error);
@@ -53,6 +58,19 @@ export const acceptApplication = async (applicationId: string): Promise<AcceptAp
 export const getLastApplication = async (freelancerId: string): Promise<LastApplicationResponse> => {
     try {
         const response = await apiClient.get(`/applications/last/${freelancerId}`);
+        return response.data;
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const submitDeliverable = async (jobId: string, formData: FormData): Promise<SubmitDeliverableResponse> => {
+    try {
+        const response = await apiClient.put(`/applications/${jobId}/submit-deliverable`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     } catch (error) {
         return handleApiError(error);

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { Avatar } from '../../components/common/Avatar';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { EditProfileModal } from '../../components/modals/EditProfileModal';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";

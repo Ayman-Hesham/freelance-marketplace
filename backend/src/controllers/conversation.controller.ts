@@ -20,14 +20,21 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
   .populate('jobId', 'title')
   .sort({ lastMessageAt: -1 });
 
-  // Add unread count and last message for each conversation
   const conversationsWithData = await Promise.all(
     conversations.map(async (conv) => {
-      const unreadCount = await Message.countDocuments({
-        conversationId: conv._id,
-        senderId: { $ne: userId },
-        read: false
-      });
+      let unreadCount = conv.unreadCount?.get(userId!) || 0;
+      
+      if (!conv.unreadCount?.has(userId!)) {
+        unreadCount = await Message.countDocuments({
+          conversationId: conv._id,
+          senderId: { $ne: userId },
+          read: false
+        });
+
+        await Conversation.findByIdAndUpdate(conv._id, {
+          $set: { [`unreadCount.${userId}`]: unreadCount }
+        });
+      }
 
       const lastMessage = await Message.findOne({ conversationId: conv._id })
         .sort({ createdAt: -1 })
@@ -50,9 +57,16 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
         }
       }
 
+      const unreadCountObj: { [key: string]: number } = {};
+      if (conv.unreadCount) {
+        for (const [key, value] of conv.unreadCount) {
+          unreadCountObj[key] = value;
+        }
+      }
+
       return {
         ...conversationObj,
-        unreadCount,
+        unreadCount: unreadCountObj,
         lastMessage: lastMessage ? [lastMessage.toJSON()] : []
       };
     })
@@ -79,5 +93,14 @@ export const getConversationByJobId = asyncHandler(async (req: Request, res: Res
     throw error;
   }
 
-  res.json(conversation);
+  const conversationObj = conversation.toJSON();
+  const unreadCountObj: { [key: string]: number } = {};
+  if (conversation.unreadCount) {
+    for (const [key, value] of conversation.unreadCount) {
+      unreadCountObj[key] = value;
+    }
+  }
+  conversationObj.unreadCount = unreadCountObj;
+
+  res.json(conversationObj);
 });

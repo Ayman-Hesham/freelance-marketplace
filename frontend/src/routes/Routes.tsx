@@ -32,9 +32,11 @@ export const router = createBrowserRouter([
     path: "/client-profile",
     element: (
       <ProtectedRoute requiredRole="client">
-        <Layout>
-          <ClientProfile />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <ClientProfile />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },
@@ -42,19 +44,11 @@ export const router = createBrowserRouter([
     path: "/freelancer-profile",
     element: (
       <ProtectedRoute requiredRole="freelancer">
-        <Layout>
-          <FreelancerProfile />
-        </Layout>
-      </ProtectedRoute>
-    )
-  },
-  {
-    path: "/my-jobs",
-    element: (
-      <ProtectedRoute requiredRole="client">
-        <Layout>
-          <ClientJobs />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <FreelancerProfile />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },
@@ -62,19 +56,35 @@ export const router = createBrowserRouter([
     path: "/jobs",
     element: (
       <ProtectedRoute>
-        <Layout>
-          <JobsPage />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <JobsPage />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
-    ),
+    )
+  },
+  {
+    path: "/my-jobs",
+    element: (
+      <ProtectedRoute requiredRole="client">
+        <MessageProvider>
+          <Layout>
+            <ClientJobs />
+          </Layout>
+        </MessageProvider>
+      </ProtectedRoute>
+    )
   },
   {
     path: "/jobs/:id",
     element: (
       <ProtectedRoute>
-        <Layout>
-          <JobDetailsPage />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <JobDetailsPage />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },
@@ -82,9 +92,11 @@ export const router = createBrowserRouter([
     path: "/applications/by-job/:id",
     element: (
       <ProtectedRoute requiredRole="client">
-        <Layout>
-          <JobApplicationsPage />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <JobApplicationsPage />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },
@@ -92,9 +104,11 @@ export const router = createBrowserRouter([
     path: "/applications/:id",
     element: (
       <ProtectedRoute requiredRole="client">
-        <Layout>
-          <ApplicationDetailsPage />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <ApplicationDetailsPage />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },
@@ -102,9 +116,11 @@ export const router = createBrowserRouter([
     path: "/my-applications",
     element: (
       <ProtectedRoute requiredRole="freelancer">
-        <Layout>
-          <FreelancerApplications />
-        </Layout>
+        <MessageProvider>
+          <Layout>
+            <FreelancerApplications />
+          </Layout>
+        </MessageProvider>
       </ProtectedRoute>
     )
   },

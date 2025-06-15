@@ -35,24 +35,28 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     }
 
     let avatarUrl = null;
-    if (job.clientId && (job.clientId as any).avatar) {
+    if (job.clientId && (job.clientId as any).avatar !== null) {
         avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
     }
 
-    let hasApplied = null;
+    let hasApplied = undefined;
     const application = await Application.findOne({ jobId: job._id, freelancerId: req.user?.id });
     if (application) {
         hasApplied = true;
     }
 
-    let applicationStatus = null;
+    let applicationStatus = undefined;
     if (isApplication) {
-        const application = await Application.findOne({ jobId: job._id, freelancerId: req.user?.id });
         applicationStatus = application?.status;
     }
 
+    let deliverable = undefined;
+    if (job.status === 'Pending Approval') {
+        deliverable = await getSignedDownloadUrl(application?.deliveredWork!);
+    }
+
     res.status(200).json({
-        id: job._id,
+        id: isApplication ? application?._id : job._id,
         title: job.title,
         description: job.description,
         budget: job.budget,
@@ -60,6 +64,7 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         status: applicationStatus ? applicationStatus : job.status,
         hasApplications: job.applications.length > 0,
         hasApplied: hasApplied,
+        deliverable: deliverable,
         poster: {
             id: (job.clientId as any).id,
             name: (job.clientId as any).name,
@@ -241,18 +246,17 @@ export const filterJobs = asyncHandler(async (req: Request, res: Response) => {
 export const searchJobs = asyncHandler(async (req: Request, res: Response) => {
     const { query } = req.query;
 
-    const searchQuery = { 
-        status: 'Open',
-        $or: [
-            { title: { $regex: query, $options: 'i' } },
-            { description: { $regex: query, $options: 'i' } }
-        ]
-    };
-
-    const jobs = await Job.find(searchQuery)
-        .sort({ createdAt: -1 })
-        .populate('clientId', 'name avatar');
-
+    const jobs = await Job.find(
+        { 
+            $text: { $search: query as string },
+            status: 'Open' 
+        },
+        { score: { $meta: "textScore" } }
+    ).sort({ 
+        score: { $meta: "textScore" },
+        createdAt: -1
+    }).populate('clientId', 'name avatar');
+    
     if (!jobs.length) {
         res.status(200).json({
             jobs: [],

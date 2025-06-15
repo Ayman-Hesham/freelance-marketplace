@@ -1,5 +1,10 @@
 import axios from 'axios';
-import { GetJobsResponse, GetJobByIdResponse, CreateJobRequest, CreateJobResponse, FilterJobsRequest, DeleteJobResponse } from '../types/job.types';
+import { GetJobsResponse, 
+        GetJobByIdResponse, 
+        CreateJobRequest, 
+        CreateJobResponse, 
+        FilterJobsRequest, 
+        DeleteJobResponse } from '../types/job.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({

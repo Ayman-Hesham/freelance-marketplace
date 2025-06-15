@@ -57,7 +57,6 @@ export function initializeSocket(server: HttpServer) {
 
     socket.on('join-conversation', async (conversationId: string) => {
       try {
-        // Verify user has access to this conversation
         const conversation = await Conversation.findOne({
           _id: conversationId,
           $or: [
@@ -79,6 +78,11 @@ export function initializeSocket(server: HttpServer) {
             { read: true }
           );
 
+          // Reset unread count for this user
+          await Conversation.findByIdAndUpdate(conversationId, {
+            $set: { [`unreadCount.${userId}`]: 0 }
+          });
+
           // Notify other participants that messages were read
           socket.to(`conversation-${conversationId}`).emit('messages-read', {
             conversationId,
@@ -96,52 +100,53 @@ export function initializeSocket(server: HttpServer) {
 
     socket.on('send-message', async (data) => {
       try {
-        const { conversationId, content, tempId } = data;
+        const { conversationId, content, messageId } = data;
         const userId = socket.data.userId;
 
-        // Validate conversation access
         const conversation = await Conversation.findOne({
           _id: conversationId,
-          $or: [
-            { clientId: userId },
-            { freelancerId: userId }
-          ]
+          $or: [{ clientId: userId }, { freelancerId: userId }]
         });
 
         if (!conversation) {
-          socket.emit('message-error', { 
-            tempId,
-            error: 'Conversation not found or access denied' 
-          });
+          socket.emit('message-error', { messageId });
           return;
         }
 
-        // Create message in database
         const message = await Message.create({
           conversationId,
           senderId: userId,
-          content
+          content,
+          read: false
         });
 
-        // Update conversation
+        // Determine recipient
+        const recipientId = conversation.clientId.toString() === userId 
+          ? conversation.freelancerId.toString()
+          : conversation.clientId.toString();
+
+        // Update conversation with new message and unread count
         await Conversation.findByIdAndUpdate(conversationId, {
           $push: { messages: message._id },
-          lastMessageAt: new Date()
+          lastMessageAt: new Date(),
+          $inc: { [`unreadCount.${recipientId}`]: 1 }
         });
 
-        // Populate sender info
         const populatedMessage = await message.populate('senderId', 'id name avatar');
         const messageToSend = populatedMessage.toJSON();
 
-        // Emit to conversation room AND sender
+        // Send to sender
+        socket.emit('message-sent', { 
+          messageId, 
+          message: messageToSend 
+        });
+        
+        // Send to recipient
         socket.to(`conversation-${conversationId}`).emit('receive-message', messageToSend);
-        socket.emit('receive-message', messageToSend);
+        socket.to(recipientId).emit('unread-count-updated');
 
       } catch (error) {
-        socket.emit('message-error', { 
-          tempId: data.tempId,
-          error: 'Failed to send message' 
-        });
+        socket.emit('message-error', { messageId: data.messageId });
       }
     });
 
@@ -159,8 +164,54 @@ export function initializeSocket(server: HttpServer) {
       });
     });
 
-    socket.on('disconnect', () => {
+    socket.on('mark-messages-read', async ({ conversationId }) => {
+      try {
+        const userId = socket.data.userId;
+
+        // Reset unread count for this user
+        await Conversation.findByIdAndUpdate(conversationId, {
+          $set: { [`unreadCount.${userId}`]: 0 }
+        });
+
+        // Mark messages as read
+        await Message.updateMany(
+          { 
+            conversationId,
+            senderId: { $ne: userId },
+            read: false 
+          },
+          { read: true }
+        );
+
+        // Notify all participants
+        io.to(`conversation-${conversationId}`).emit('messages-read', {
+          conversationId,
+          readBy: userId
+        });
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    });
+
+    // Add logout handler
+    socket.on('logout', () => {
       // Remove from online tracking
+      if (onlineUsers.has(userId)) {
+        onlineUsers.get(userId)!.delete(socket.id);
+        if (onlineUsers.get(userId)!.size === 0) {
+          onlineUsers.delete(userId);
+          // Emit user offline status
+          socket.broadcast.emit('user-offline', { userId });
+        }
+      }
+      userSockets.delete(socket.id);
+      
+      // Disconnect the socket
+      socket.disconnect(true);
+    });
+
+    // Update your existing disconnect handler to be more robust
+    socket.on('disconnect', () => {
       if (onlineUsers.has(userId)) {
         onlineUsers.get(userId)!.delete(socket.id);
         if (onlineUsers.get(userId)!.size === 0) {

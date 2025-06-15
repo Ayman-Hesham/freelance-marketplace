@@ -28,9 +28,8 @@ export interface IApplication extends mongoose.Document {
     coverLetter: string;
     portfolio: string;
     status: string;
-    deliveredWork?: string;
-    deliveryMessage?: string;
-    correctionMessage?: string;
+    deliveredWork: string;
+    correctionMessage: string;
 }
 
 export interface IConversation extends mongoose.Document {
@@ -40,6 +39,7 @@ export interface IConversation extends mongoose.Document {
     messages: mongoose.Types.ObjectId[] | IMessage[];
     lastMessageAt: Date;
     status: string;
+    unreadCount: Map<string, number>;
 }
 
 export interface IMessage extends mongoose.Document {

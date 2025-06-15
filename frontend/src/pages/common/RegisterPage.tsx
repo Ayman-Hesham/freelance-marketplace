@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { RegistrationForm } from '../../types/auth.types';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import PulseLoader from "react-spinners/PulseLoader";
