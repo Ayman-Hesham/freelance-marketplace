@@ -4,6 +4,8 @@ import { ErrorWithStatus } from '../types/error.types';
 import Job from '../models/job.model';
 import { getSignedDownloadUrl } from '../services/s3.service';
 import Application from '../models/application.model';
+import { IApplication } from '../types/model.types';
+import mongoose from 'mongoose';
 
 export const createJob = asyncHandler(async (req: Request, res: Response) => {
     const { title, description, budget, deliveryTime } = req.body;
@@ -23,10 +25,10 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
 
 export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
-    const isApplication = req.query.isApplication;
+    const isApplication = req.query.isApplication === 'true';
 
     const job = await Job.findById(id).populate('clientId', 'name avatar')
-    .populate('applications');
+    .populate('applications', 'freelancerId status deliveredWork correctionMessage');
 
     if (!job) {
         const error: ErrorWithStatus = new Error('Job not found');
@@ -39,32 +41,39 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
     }
 
-    let hasApplied = undefined;
-    const application = await Application.findOne({ jobId: job._id, freelancerId: req.user?.id });
-    if (application) {
-        hasApplied = true;
+    let hasApplied = null;
+    let application = (job.applications as IApplication[]).find(app => app.freelancerId.toString() === req.user?.id);
+    if (isApplication){
+        if (application) {
+            hasApplied = true;
+        }
+    } else {
+        const FINAL_STATUSES = ['Pending Approval', 'Correction', 'Completed'] as const;
+        application = (job.applications as IApplication[]).find(app => FINAL_STATUSES.includes(app.status as any));
     }
 
-    let applicationStatus = undefined;
-    if (isApplication) {
-        applicationStatus = application?.status;
-    }
-
-    let deliverable = undefined;
-    if (job.status === 'Pending Approval') {
+    const applicationStatus = application?.status;
+    
+    let deliverable = null;
+    if ((job.status === 'Pending Approval' || job.status === 'Completed') && application?.deliveredWork) {
         deliverable = await getSignedDownloadUrl(application?.deliveredWork!);
     }
 
+    const id_ = isApplication ? application?._id : job._id;
+
     res.status(200).json({
-        id: isApplication ? application?._id : job._id,
+        id: id_,
         title: job.title,
         description: job.description,
         budget: job.budget,
         deliveryTime: job.deliveryTime,
+        freelancerId: job.freelancerId,
         status: applicationStatus ? applicationStatus : job.status,
         hasApplications: job.applications.length > 0,
         hasApplied: hasApplied,
         deliverable: deliverable,
+        correctionMessage: application?.correctionMessage,
+        blockMessage: job.blockMessage,
         poster: {
             id: (job.clientId as any).id,
             name: (job.clientId as any).name,
@@ -304,4 +313,41 @@ export const deleteJob = asyncHandler(async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ message: 'Job deleted successfully' });
+})
+
+export const blockJob = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { message } = req.body;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const job = await Job.findByIdAndUpdate(
+            new mongoose.Types.ObjectId(id),
+            { status: 'Blocked by Admin', blockMessage: message },
+            { session, new: true }
+        );
+
+        if (!job) {
+            const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
+        }
+
+        const applications = await Application.find({ jobId: job._id }).session(session);   
+
+        for (const application of applications) {
+            application.status = 'Not Selected';
+            await application.save({ session });
+        }
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Job blocked successfully' });
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
+    }
 })

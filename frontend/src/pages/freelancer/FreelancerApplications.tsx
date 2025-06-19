@@ -13,7 +13,6 @@ const FreelancerApplications = () => {
   const { user } = useAuth()
   const location = useLocation()
   const applicationSuccess = location.state?.applicationSuccess
-  const submitSuccess = location.state?.submitSuccess
 
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['applications', 'freelancer', user!.id],
@@ -30,11 +29,11 @@ const FreelancerApplications = () => {
   }, [applicationSuccess])
 
   useEffect(() => {
-    if (submitSuccess) {
-        toast.success('Deliverable submitted successfully!')
-        window.history.replaceState({}, document.title)
+    if (location.state?.jobLoadError) {
+      toast.error('Unable to load application');
+      window.history.replaceState({}, document.title);
     }
-  }, [submitSuccess])
+  }, [location.state?.jobLoadError]);
 
   const isJobResponse = (data: ApplicationsByFreelancerIdResponse): data is JobResponse => {
     return 'jobs' in data;

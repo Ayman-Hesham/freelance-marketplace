@@ -325,7 +325,7 @@ export const submitDeliverable = asyncHandler(async (req: Request, res: Response
 
         const application = await Application.findOne({ jobId: job._id, freelancerId }).session(session);
 
-        if (!application) {
+        if(!application) {
             const error: ErrorWithStatus = new Error('Application not found');
             error.status = 404;
             throw error;
@@ -337,6 +337,90 @@ export const submitDeliverable = asyncHandler(async (req: Request, res: Response
 
         await session.commitTransaction();
         res.status(200).json({ message: 'Deliverable submitted successfully' });
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
+    }
+});
+
+export const requestCorrection = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { message } = req.body;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const job = await Job.findByIdAndUpdate(
+            new mongoose.Types.ObjectId(id),
+            { status: 'Correction' },
+            { session, new: true }
+        );
+
+        if (!job) {
+            const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
+        }
+
+        const application = await Application.findOne({ jobId: job._id, status: { $in: ['Pending Approval', 'Correction'] } }).session(session);
+
+        if (!application) {
+            const error: ErrorWithStatus = new Error('Application not found');
+            error.status = 404;
+            throw error;
+        }
+
+        application.correctionMessage = message;
+        application.status = 'Correction';
+        await application.save({ session });
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Correction requested successfully' });
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
+    }
+});
+
+export const acceptDeliverable = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params; 
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const application = await Application.findById(
+            new mongoose.Types.ObjectId(id)
+        ).session(session);
+
+        if (!application) {
+            const error: ErrorWithStatus = new Error('Application not found');
+            error.status = 404;
+            throw error;
+        }
+
+        const job = await Job.findByIdAndUpdate(
+            application.jobId,
+            { status: 'Completed' },
+            { session, new: true }
+        );
+
+        if (!job) {
+            const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
+        }
+
+        application.status = 'Completed';
+        await application.save({ session });
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Deliverable accepted successfully' });
     } catch (error) {
         await session.abortTransaction();
         throw error;

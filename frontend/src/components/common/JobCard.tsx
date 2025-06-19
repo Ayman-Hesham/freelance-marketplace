@@ -42,7 +42,8 @@ export const JobCard = ({
   const notInClientJobsPage = !clientId && poster;
   const inJobApplicationsPage = location.pathname.includes(`/applications/by-job/`);
   const inApplicationDetailsPage = location.pathname === `/applications/${id}`;
-  const jobInProgress = status === 'In-Progress';
+  const inMyJobsPage = location.pathname === '/my-jobs';
+  const jobIsOpen = status === 'Open';
 
   const handleClick = (e: React.MouseEvent) => {
     if (inJobApplicationsPage && (e.target as HTMLElement).tagName !== 'A') {
@@ -92,7 +93,7 @@ export const JobCard = ({
           </div>
         ) : (
           <div className={`flex-1 min-w-0 ${!clientId ? 'pl-4 border-l border-gray-300' : ''}`}>
-            <h3 className="text-lg font-semibold text-brand-primary-500 mb-3 truncate">
+            <h3 className={`text-lg font-semibold text-brand-primary-500 mb-3 truncate ${status === 'Blocked by Admin' ? 'line-through' : ''}`}>
               {title}
             </h3>
             <div className="flex items-center gap-8">
@@ -108,7 +109,7 @@ export const JobCard = ({
             </div>
           </div>
         )}
-        {clientId && !inJobDetailsPage && !inJobApplicationsPage && !jobInProgress && (
+        {clientId && inMyJobsPage && jobIsOpen && (
           <div className="flex items-center">
             {hasApplications ? (
               <button 

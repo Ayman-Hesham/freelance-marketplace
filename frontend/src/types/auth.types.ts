@@ -31,7 +31,7 @@ export interface User {
     avatar?: string;
     bio?: string;
     portfolio?: string;
-    role?: 'client' | 'freelancer';
+    role?: 'client' | 'freelancer' | 'admin';
 }
 
 export interface AvatarProps {

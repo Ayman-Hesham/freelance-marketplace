@@ -4,7 +4,8 @@ import { GetJobsResponse,
         CreateJobRequest, 
         CreateJobResponse, 
         FilterJobsRequest, 
-        DeleteJobResponse } from '../types/job.types';
+        DeleteJobResponse,
+        BlockJobResponse } from '../types/job.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
@@ -78,6 +79,15 @@ export const searchJobs = async (query: string): Promise<GetJobsResponse> => {
 export const deleteJob = async (id: string): Promise<DeleteJobResponse> => {
     try {
         const response = await apiClient.delete(`/jobs/${id}`);
+        return response.data;
+    } catch (err) {
+        return handleApiError(err);
+    }
+};
+
+export const blockJob = async (id: string, message: string): Promise<BlockJobResponse> => {
+    try {
+        const response = await apiClient.put(`/jobs/block/${id}`, { message });
         return response.data;
     } catch (err) {
         return handleApiError(err);

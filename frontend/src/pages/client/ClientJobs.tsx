@@ -76,6 +76,13 @@ export const ClientJobs = () => {
     }
   }, [ApplicationAccepted, jobDeleted])
 
+  useEffect(() => {
+    if (location.state?.jobLoadError) {
+      toast.error('Unable to load job details');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state?.jobLoadError]);
+
   if (isLoading) return (
     <div className="h-screen flex items-center justify-center">
       <PulseLoader color="#222E50"/>

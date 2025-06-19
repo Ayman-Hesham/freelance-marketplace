@@ -5,11 +5,11 @@ export const getStatusTextColor = (status?: string): string => {
       'In-Progress': 'text-status-In-Progress-600',
       'Pending Approval': 'text-status-Pending-600',
       'Completed': 'text-status-Completed-600',
-      'Blocked by Admin': 'text-status-Blocked by Admin-600',
+      'Blocked by Admin': 'text-status-Blocked-by-Admin-600',
       
       // Application statuses
       'Pending': 'text-status-Pending-600',
-      'Not Selected': 'text-status-Not Selected-600',
+      'Not Selected': 'text-status-Not-Selected-600',
       'Correction': 'text-status-Correction-600'
     };
   

@@ -46,3 +46,11 @@ export type LastApplicationResponse = {
 export type SubmitDeliverableResponse = {
     message: string;
 } | ErrorResponse
+
+export type RequestCorrectionResponse = {
+    message: string;
+} | ErrorResponse
+
+export type AcceptDeliverableResponse = {
+    message: string;
+} | ErrorResponse

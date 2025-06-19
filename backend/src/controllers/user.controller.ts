@@ -8,6 +8,7 @@ import { uploadToS3, deleteFromS3, getSignedDownloadUrl } from '../services/s3.s
 import { v4 as uuidv4 } from 'uuid';
 import multer from 'multer';
 import '../types/request.types';
+import { processAvatar } from '../services/image.service';
 
 require('dotenv').config();
 
@@ -226,9 +227,18 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     }
     
     if (avatarFile) {
-      const key = `avatars/${req.user?.id}/${uuidv4()}__${avatarFile.originalname}`;
-      await uploadToS3(avatarFile.buffer, key, avatarFile.mimetype);
-      user.avatar = key;
+      try {
+        const processedAvatar = await processAvatar(avatarFile.buffer);
+        const key = `avatars/${req.user?.id}/${uuidv4()}.webp`;
+        await uploadToS3(processedAvatar, key, 'image/webp');
+        user.avatar = key;
+      } catch (error) {
+        const err: ErrorWithStatus = new Error(
+          error instanceof Error ? error.message : 'Failed to process avatar image'
+        );
+        err.status = 400;
+        throw err;
+      }
     } else {
       user.avatar = null;
     }

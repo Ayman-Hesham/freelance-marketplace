@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "../../hooks/useAuth"
 import { Job } from "../../types/job.types"
+import { Bounce, toast, ToastContainer } from "react-toastify"
 
 interface Props {
     onClose: (wasCreated?: boolean) => void
@@ -56,20 +57,13 @@ const ApplicationModal = ({ onClose }: Props) => {
         }
     }, [lastApplication, setValue])
 
-    const validateFileSize = (file: File, maxSize: number, errorMessage: string): boolean => {
-        if (file.size > maxSize) {
-            alert(errorMessage)
-            return false
-        }
-        return true
-    }
-
     const handlePortfolioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (file) {
             const maxSize = 16 * 1024 * 1024 
             
-            if (!validateFileSize(file, maxSize, 'File size must be less than 16MB')) {
+            if (file.size > maxSize) {
+                toast.warning("File size must be less than 16MB")
                 event.target.value = ''
                 return
             }
@@ -125,6 +119,20 @@ const ApplicationModal = ({ onClose }: Props) => {
     }
       
     return (
+        <>
+        <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
             <div className="relative bg-white rounded-lg p-6 max-w-2xl w-full">
                 <button 
@@ -213,11 +221,11 @@ const ApplicationModal = ({ onClose }: Props) => {
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center justify-center bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:bg-white disabled:cursor-not-allowed min-w-[120px]"
+                            className="flex items-center justify-center bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:cursor-not-allowed min-w-[120px]"
                             disabled={isSubmitting}
                         >
                             {isSubmitting || isLoadingLastApplication ? (
-                                <PulseLoader color="#222E50" size={10} />
+                                <PulseLoader color="#fff" size={10} />
                             ) : (
                                 'Submit'
                             )}
@@ -226,6 +234,7 @@ const ApplicationModal = ({ onClose }: Props) => {
                 </form>
             </div>
         </div>
+        </>
     )
 }
 

@@ -20,7 +20,7 @@ const jobSchema = new mongoose.Schema<IJob>({
     },
     status: {
         type: String,
-        enum: ['Open', 'In-Progress', 'Pending Approval', 'Correction', 'Completed'],
+        enum: ['Open', 'In-Progress', 'Pending Approval', 'Correction', 'Completed', 'Blocked by Admin'],
         default: 'Open'
     },
     clientId: {
@@ -36,7 +36,11 @@ const jobSchema = new mongoose.Schema<IJob>({
     applications: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Application'
-    }]
+    }],
+    blockMessage: {
+        type: String,
+        default: null
+    }
 }, {
     timestamps: true,
     versionKey: false,

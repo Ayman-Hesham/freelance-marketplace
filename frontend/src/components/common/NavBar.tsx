@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, FileText, MessageSquare, User } from 'lucide-react';
+import { Search, FileText, MessageSquare, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
@@ -10,7 +10,7 @@ import { useMessageNotifications } from '../../hooks/useMessageNotifications';
 type Props = {}
 
 export const Navbar = (_props: Props) => {
- const {user} = useAuth();
+ const {user, logout} = useAuth();
  const { unreadCount } = useUnreadCount();
  useMessageNotifications();
  
@@ -22,6 +22,11 @@ export const Navbar = (_props: Props) => {
    if (e.key === 'Enter' && searchQuery.trim()) {
      navigate(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
    }
+ };
+
+ const handleLogout = async () => {
+   await logout();
+   navigate('/'); // Redirect to home page after logout
  };
 
  const MessageIcon = () => (
@@ -41,7 +46,7 @@ export const Navbar = (_props: Props) => {
 
   return (
     <nav className="bg-primary-500 py-3">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-8 px-6">
+      <div className={`max-w-6xl mx-auto flex items-center justify-between gap-8 ${user?.role === 'admin' ? 'px-24' : 'px-6'}`}>
         <Link to='/jobs' data-tooltip-id="tooltip" data-tooltip-content="Jobs list">
           <span className="text-secondary-500 text-xl font-semibold whitespace-nowrap mx-4">
             Freelance Marketplace
@@ -62,7 +67,18 @@ export const Navbar = (_props: Props) => {
           </div>
         </div>
 
-          {user?.role === 'client' ? (
+          {user?.role === 'admin' ? (
+            <div className="flex items-center gap-8 mx-4">
+              <button 
+                onClick={handleLogout}
+                className="text-white hover:text-secondary-500 transition"
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Logout"
+              >
+                <LogOut className="w-6 h-6" />
+              </button>
+            </div>
+          ) : user?.role === 'client' ? (
             <div className="flex items-center gap-8 mx-4">
               <Link to='/my-jobs' data-tooltip-id="tooltip" data-tooltip-content="My Jobs">
                 <button className="text-white hover:text-secondary-500 transition">
@@ -78,7 +94,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
             </div>
-          ):(
+          ) : ( user?.role === 'freelancer' && (
             <div className="flex items-center gap-8 mx-4">
               <Link to='/my-applications' data-tooltip-id="tooltip" data-tooltip-content="My Applications">
                 <button className="text-white hover:text-secondary-500 transition">
@@ -94,7 +110,7 @@ export const Navbar = (_props: Props) => {
                 </button>
               </Link>
             </div>
-          )}
+          ))}
       </div>
       <Tooltip id="tooltip" place="bottom" />
     </nav>

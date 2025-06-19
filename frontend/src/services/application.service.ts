@@ -4,7 +4,9 @@ import { AcceptApplicationResponse,
         ApplicationsByFreelancerIdResponse, 
         CreateApplicationResponse, 
         LastApplicationResponse, 
-        SubmitDeliverableResponse } from '../types/application.types';
+        RequestCorrectionResponse, 
+        SubmitDeliverableResponse,
+        AcceptDeliverableResponse } from '../types/application.types';
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
@@ -71,6 +73,24 @@ export const submitDeliverable = async (jobId: string, formData: FormData): Prom
                 'Content-Type': 'multipart/form-data',
             },
         });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const requestCorrection = async (jobId: string, message: string): Promise<RequestCorrectionResponse> => {
+    try {
+        const response = await apiClient.put(`/applications/${jobId}/request-correction`, { message });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error);
+    }
+};
+
+export const acceptDeliverable = async (jobId: string): Promise<AcceptDeliverableResponse> => {
+    try {
+        const response = await apiClient.put(`/applications/${jobId}/accept-deliverable`);
         return response.data;
     } catch (error) {
         return handleApiError(error);

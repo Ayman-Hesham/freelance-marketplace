@@ -1,7 +1,7 @@
 import { ErrorResponse } from "./auth.types";
 
 export interface Job {
-    id?: string;
+    id: string;
     title: string;
     description: string;
     budget: number;
@@ -10,6 +10,9 @@ export interface Job {
     hasApplications?: boolean;
     hasApplied?: boolean;
     deliverable?: string;
+    correctionMessage?: string;
+    freelancerId?: string;
+    blockMessage?: string;
     poster: {
         id: string;
         name?: string;
@@ -44,4 +47,7 @@ export type DeleteJobResponse = {
     message: string;
 } | ErrorResponse
 
+export type BlockJobResponse = {
+    message: string;
+} | ErrorResponse
 

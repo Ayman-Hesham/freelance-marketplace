@@ -7,6 +7,8 @@ import { getJobs, filterJobs, searchJobs } from '../../services/job.service';
 import { GetJobsResponse, JobResponse } from '../../types/job.types';
 import { PulseLoader } from 'react-spinners';
 import { X } from "lucide-react";
+import { useLocation } from 'react-router-dom';
+import { Bounce, toast, ToastContainer } from 'react-toastify';
 
 interface Props {}
 
@@ -14,6 +16,7 @@ export const JobsPage = (_props: Props) => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q');
+  const location = useLocation();
   
   const [filterParams, setFilterParams] = useState<{
     budget?: number;
@@ -72,6 +75,12 @@ export const JobsPage = (_props: Props) => {
     });
   };
 
+  useEffect(() => {
+    if (location.state?.jobLoadError) {
+      toast.error('Failed to load job details');
+    }
+  }, [location.state?.jobLoadError]);
+
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;
   }
@@ -84,6 +93,19 @@ export const JobsPage = (_props: Props) => {
 
   return (
     <>
+    <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
       <div className="max-w-6xl mx-auto py-6 px-8">
         <div className="grid grid-cols-12 gap-6">
           {jobsData && isJobResponse(jobsData) && (

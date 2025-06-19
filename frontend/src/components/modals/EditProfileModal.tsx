@@ -6,6 +6,7 @@ import { User } from '../../types/auth.types';
 import { ProfileFormData } from '../../types/profile.types';
 import { useAuth } from '../../hooks/useAuth';
 import { PulseLoader } from 'react-spinners';
+import { Bounce, toast, ToastContainer } from 'react-toastify';
 
 interface EditProfileModalProps {
   user: User | null;
@@ -77,14 +78,6 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
     return true;
   };
 
-  const validateFileSize = (file: File, maxSize: number, errorMessage: string): boolean => {
-    if (file.size > maxSize) {
-      alert(errorMessage);
-      return false;
-    }
-    return true;
-  };
-
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -117,10 +110,11 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
     if (file) {
       const maxSize = 16 * 1024 * 1024;
       
-      if (!validateFileSize(file, maxSize, 'File size must be less than 16MB')) {
-        event.target.value = '';
-        return;
-      }
+      if (file.size > maxSize) {
+        toast.warning("File size must be less than 16MB")
+        event.target.value = ''
+        return
+    }
 
       setPortfolioFile(file);
       setPortfolioFileName(file.name);
@@ -136,6 +130,20 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
   };
 
   return (
+    <>
+    <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
       <div className="relative bg-white rounded-lg p-6 max-w-2xl w-full">
         <button 
@@ -308,5 +316,6 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
         </form>
       </div>
     </div>
+    </>
   );
 } 

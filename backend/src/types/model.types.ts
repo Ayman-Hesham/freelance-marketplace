@@ -20,6 +20,7 @@ export interface IJob extends mongoose.Document {
     clientId: mongoose.Types.ObjectId | IUser;
     freelancerId?: mongoose.Types.ObjectId | IUser;
     applications: mongoose.Types.ObjectId[] | IApplication[];
+    blockMessage: string;
 }
 
 export interface IApplication extends mongoose.Document {
