@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import multer from 'multer';
 import mongoose from 'mongoose';
 import Conversation from '../models/conversation.model';
+import { rankApplications } from '../services/LLM.service';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -138,10 +139,16 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
         throw error;
     }
 
+    const job = await Job.findById(new mongoose.Types.ObjectId(id));
+    if (!job) {
+        const error: ErrorWithStatus = new Error('Job not found');
+        error.status = 404;
+        throw error;
+    }
+
     const applications = await Application.find({ jobId: new mongoose.Types.ObjectId(id) })
-        .sort({ createdAt: 1 })
         .populate('freelancerId', 'name avatar')
-        .lean()
+        .lean();
 
     if (!applications || applications.length === 0) {
         const error: ErrorWithStatus = new Error('No applications found');
@@ -156,7 +163,9 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
         }
 
         let portfolioUrl = null;
-        portfolioUrl = await getSignedDownloadUrl(application.portfolio);
+        if (application.portfolio) {
+            portfolioUrl = await getSignedDownloadUrl(application.portfolio);
+        }
 
         return {
             id: application._id,
@@ -170,10 +179,41 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
         };
     }));
 
-    res.status(200).json({
-        applications: applicationsWithUrls,
-        total: applicationsWithUrls.length
-    });
+    if (applications.length === 1) {
+        res.status(200).json({
+            applications: applicationsWithUrls,
+            total: applicationsWithUrls.length
+        });
+        return;
+    }
+
+    try {
+        const rankingInput = applications.map(app => ({
+            id: app._id.toString(),
+            coverLetter: app.coverLetter
+        }));
+
+        const rankingResult = await rankApplications(job.description, rankingInput);
+        
+        const rankedApplications = applicationsWithUrls.map(app => {
+            const rank = rankingResult.ranking.find(r => r.id === app.id.toString())?.rank || Infinity;
+            return {
+                ...app,
+                rank
+            };
+        }).sort((a, b) => a.rank - b.rank);
+
+        res.status(200).json({
+            applications: rankedApplications,
+            total: rankedApplications.length
+        });
+        return;
+    } catch (error) {
+        console.error('Error ranking applications:', error);
+        const rankingError: ErrorWithStatus = new Error('Failed to rank applications');
+        rankingError.status = 500;
+        throw rankingError;
+    }
 });
 
 export const acceptApplication = asyncHandler(async (req: Request, res: Response) => {

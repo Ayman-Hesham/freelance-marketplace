@@ -214,7 +214,7 @@ export function EditProfileModal({ user, onClose, userRole }: EditProfileModalPr
                   {...register("name", {
                     required: "Name is required",
                     minLength: { value: 3, message: "Name must be at least 3 characters" },
-                    maxLength: { value: 15, message: "Name must be less than 15 characters" }
+                    maxLength: { value: 25, message: "Name must be less than 25 characters" }
                   })}
                   disabled={isSubmitting}
                 />

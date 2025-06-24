@@ -105,9 +105,9 @@ export const RegisterPage = (_props: Props) => {
                     value.replace(/\s+/g, "").length >= 3 ||
                     "Name must be at least 3 characters excluding spaces",
                   maxLength: {
-                    value: 15,
+                    value: 25,
                     message:
-                      "Name must be less than 15 characters excluding spaces",
+                      "Name must be less than 25 characters excluding spaces",
                   },
                 })}
               />

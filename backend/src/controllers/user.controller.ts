@@ -33,8 +33,8 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
 
     const sanitizedName = name.trim();
     
-    if (sanitizedName.length < 3 || sanitizedName.length > 15) {
-        const error: ErrorWithStatus = new Error('Name must be between 3 and 15 characters long');
+    if (sanitizedName.length < 3 || sanitizedName.length > 25) {
+        const error: ErrorWithStatus = new Error('Name must be between 3 and 25 characters long');
         error.status = 400
         throw error
     }
