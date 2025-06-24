@@ -24,11 +24,15 @@ export type CreateApplicationResponse = Application | ErrorResponse
 export type ApplicationsByFreelancerIdResponse = {
     jobs: Job[];
     total: number;
+    currentPage: number;
+    totalPages: number;
 } | ErrorResponse
 
 export interface ApplicationsResponse {
     applications: Application[];
     total: number;
+    currentPage: number;
+    totalPages: number;
 } 
 
 export type ApplicationByJobIdResponse = ApplicationsResponse | ErrorResponse

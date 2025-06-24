@@ -30,18 +30,18 @@ export const createApplication = async (formData: FormData): Promise<CreateAppli
     }
 };
 
-export const getApplicationsByFreelancerId = async (freelancerId: string): Promise<ApplicationsByFreelancerIdResponse> => {
+export const getApplicationsByFreelancerId = async (freelancerId: string, page: number = 1): Promise<ApplicationsByFreelancerIdResponse> => {
     try {
-        const response = await apiClient.get(`/applications/by-freelancer/${freelancerId}`);
+        const response = await apiClient.get(`/applications/by-freelancer/${freelancerId}?page=${page}`);
         return response.data;
     } catch (error) {
         return handleApiError(error);
     }
 };
 
-export const getApplicationsByJobId = async (jobId: string): Promise<ApplicationByJobIdResponse> => {
+export const getApplicationsByJobId = async (jobId: string, page: number = 1): Promise<ApplicationByJobIdResponse> => {
     try {
-        const response = await apiClient.get(`/applications/by-job/${jobId}`);
+        const response = await apiClient.get(`/applications/by-job/${jobId}?page=${page}`);
         return response.data;
     } catch (error) {
         return handleApiError(error);

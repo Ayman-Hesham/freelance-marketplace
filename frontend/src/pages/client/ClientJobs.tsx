@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getJobsByClientId, deleteJob } from '../../services/job.service'
 import { toast, ToastContainer } from 'react-toastify'
 import { Bounce } from 'react-toastify'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CreateJobModal } from '../../components/modals/CreateJobModal'
 import { JobsList } from '../../components/common/JobsList'
 import { useAuth } from '../../hooks/useAuth'
@@ -11,6 +11,7 @@ import { GetJobsResponse, JobResponse } from '../../types/job.types'
 import { PulseLoader } from 'react-spinners'
 import { DeleteJobDialog } from '../../components/dialogs/DeleteJobDialog'
 import { useLocation } from 'react-router-dom'
+import { useQueryState } from 'nuqs'
 
 export const ClientJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -18,12 +19,13 @@ export const ClientJobs = () => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const [page, setPage] = useQueryState('page', { defaultValue: '1' })
   const jobDeleted = location.state?.jobDeleted
   const ApplicationAccepted = location.state?.ApplicationAccepted
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['clientJobs', user!.id],
-    queryFn: () => getJobsByClientId(user!.id),
+    queryKey: ['clientJobs', user!.id, page],
+    queryFn: () => getJobsByClientId(user!.id, parseInt(page)),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   })
@@ -60,6 +62,12 @@ export const ClientJobs = () => {
 
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage.toString())
+    // Scroll to top when page changes
+    window.scrollTo(0, 0)
   }
 
   useEffect(() => {
@@ -120,11 +128,50 @@ export const ClientJobs = () => {
 
           <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
             {jobsData && isJobResponse(jobsData) && (
-              <JobsList 
-                jobs={jobsData.jobs} 
-                clientId={user!.id} 
-                onDeleteJob={handleDeleteClick}
-              />
+              <>
+                <JobsList 
+                  jobs={jobsData.jobs} 
+                  clientId={user!.id} 
+                  onDeleteJob={handleDeleteClick}
+                />
+                
+                {/* Pagination Controls */}
+                {jobsData.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => handlePageChange(jobsData.currentPage - 1)}
+                      disabled={jobsData.currentPage === 1}
+                      className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: jobsData.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1 rounded-md ${
+                            jobsData.currentPage === pageNum
+                              ? 'bg-secondary-500 text-white'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(jobsData.currentPage + 1)}
+                      disabled={jobsData.currentPage === jobsData.totalPages}
+                      className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -84,6 +84,9 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
 export const getJobsByClientId = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id || req.user?.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
 
     if (!id) {
         const error: ErrorWithStatus = new Error('Job ID not provided');
@@ -91,14 +94,21 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
         throw error;
     }
 
-    const jobs = await Job.find({clientId: id})
-        .populate('applications', 'freelancerId')
-        .sort({ createdAt: -1 });
+    const [jobs, total] = await Promise.all([
+        Job.find({ clientId: id })
+            .populate('applications', 'freelancerId')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
+        Job.countDocuments({ clientId: id })
+    ]);
 
     if (!jobs.length) {
         res.status(200).json({
             jobs: [],
-            total: 0
+            total: 0,
+            currentPage: page,
+            totalPages: 0
         });
         return;
     }
@@ -116,19 +126,32 @@ export const getJobsByClientId = asyncHandler(async (req: Request, res: Response
                 id: (job.clientId as any)._id,
             }
         })),
-        total: jobs.length,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
     });
 });
 
 export const getJobs = asyncHandler(async (req: Request, res: Response) => {
-    const jobs = await Job.find({ status: 'Open' })
-        .sort({ createdAt: -1 })
-        .populate('clientId', 'name avatar');
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
+
+    const [jobs, total] = await Promise.all([
+        Job.find({ status: 'Open' })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('clientId', 'name avatar'),
+        Job.countDocuments({ status: 'Open' })
+    ]);
 
     if (!jobs.length) {
         res.status(200).json({
             jobs: [],
-            total: 0
+            total: 0,
+            currentPage: page,
+            totalPages: 0
         });
         return;
     }
@@ -155,55 +178,19 @@ export const getJobs = asyncHandler(async (req: Request, res: Response) => {
 
     res.status(200).json({
         jobs: jobsWithSignedUrls,
-        total: jobs.length,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
     });
 });
 
 export const filterJobs = asyncHandler(async (req: Request, res: Response) => {
     const { budget, deliveryTime } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
 
     const query: any = { status: 'Open' };
-    
-    if (!budget && !deliveryTime) {
-        const jobs = await Job.find(query)
-            .sort({ createdAt: -1 })
-            .populate('clientId', 'name avatar');
-
-        if (!jobs.length) {
-            res.status(200).json({
-                jobs: [],
-                total: 0
-            });
-            return;
-        }
-
-        const jobsWithSignedUrls = await Promise.all(jobs.map(async (job) => {
-            let avatarUrl = null;
-            if (job.clientId && (job.clientId as any).avatar) {
-                avatarUrl = await getSignedDownloadUrl((job.clientId as any).avatar);
-            }
-
-            return {
-                id: job._id,
-                title: job.title,
-                description: job.description,
-                budget: job.budget,
-                deliveryTime: job.deliveryTime,
-                status: job.status,
-                poster: {
-                    id: (job.clientId as any)._id,
-                    name: (job.clientId as any).name,
-                    avatarUrl
-                }
-            };
-        }));
-
-        res.status(200).json({
-            jobs: jobsWithSignedUrls,
-            total: jobs.length,
-        });
-        return;
-    }
     
     if (budget && Number(budget) > 0) {
         query.budget = { $lte: Number(budget) };
@@ -213,14 +200,21 @@ export const filterJobs = asyncHandler(async (req: Request, res: Response) => {
         query.deliveryTime = { $lte: Number(deliveryTime) };
     }
 
-    const jobs = await Job.find(query)
-        .sort({ createdAt: -1 })
-        .populate('clientId', 'name avatar');
+    const [jobs, total] = await Promise.all([
+        Job.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('clientId', 'name avatar'),
+        Job.countDocuments(query)
+    ]);
 
     if (!jobs.length) {
         res.status(200).json({
             jobs: [],
-            total: 0
+            total: 0,
+            currentPage: page,
+            totalPages: 0
         });
         return;
     }
@@ -248,28 +242,41 @@ export const filterJobs = asyncHandler(async (req: Request, res: Response) => {
 
     res.status(200).json({
         jobs: jobsWithSignedUrls,
-        total: jobs.length,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
     });
 });
 
 export const searchJobs = asyncHandler(async (req: Request, res: Response) => {
     const { query } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
 
-    const jobs = await Job.find(
-        { 
-            $text: { $search: query as string },
-            status: 'Open' 
-        },
-        { score: { $meta: "textScore" } }
-    ).sort({ 
-        score: { $meta: "textScore" },
-        createdAt: -1
-    }).populate('clientId', 'name avatar');
-    
+    const searchQuery = { 
+        $text: { $search: query as string },
+        status: 'Open' 
+    };
+
+    const [jobs, total] = await Promise.all([
+        Job.find(searchQuery, { score: { $meta: "textScore" } })
+            .sort({ 
+                score: { $meta: "textScore" },
+                createdAt: -1
+            })
+            .skip(skip)
+            .limit(limit)
+            .populate('clientId', 'name avatar'),
+        Job.countDocuments(searchQuery)
+    ]);
+
     if (!jobs.length) {
         res.status(200).json({
             jobs: [],
-            total: 0
+            total: 0,
+            currentPage: page,
+            totalPages: 0
         });
         return;
     }
@@ -297,7 +304,9 @@ export const searchJobs = asyncHandler(async (req: Request, res: Response) => {
 
     res.status(200).json({
         jobs: jobsWithSignedUrls,
-        total: jobs.length,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
     });
 });
 

@@ -9,6 +9,8 @@ import { PulseLoader } from 'react-spinners';
 import { X } from "lucide-react";
 import { useLocation } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
+import { useQueryState } from 'nuqs';
+import { Pagination } from '../../components/common/Pagination';
 
 interface Props {}
 
@@ -16,6 +18,7 @@ export const JobsPage = (_props: Props) => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q');
+  const [page, setPage] = useQueryState('page', { defaultValue: '1' });
   const location = useLocation();
   
   const [filterParams, setFilterParams] = useState<{
@@ -24,18 +27,19 @@ export const JobsPage = (_props: Props) => {
   }>({});
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['jobs', filterParams, searchQuery],
+    queryKey: ['jobs', filterParams, searchQuery, page],
     queryFn: async () => {
       let response: GetJobsResponse;
       
       if (!filterParams.budget && !filterParams.deliveryTime) {
-        response = searchQuery ? await searchJobs(searchQuery) : await getJobs();
+        response = searchQuery ? await searchJobs(searchQuery) : await getJobs(parseInt(page));
       } else {
         response = searchQuery 
           ? await searchJobs(searchQuery)
           : await filterJobs({ 
               budget: filterParams.budget!,
-              deliveryTime: filterParams.deliveryTime!
+              deliveryTime: filterParams.deliveryTime!,
+              page: parseInt(page)
             });
       }
 
@@ -48,7 +52,9 @@ export const JobsPage = (_props: Props) => {
         
         return {
           jobs: filteredJobs,
-          total: filteredJobs.length
+          total: filteredJobs.length,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(filteredJobs.length / 10)
         };
       }
 
@@ -60,9 +66,9 @@ export const JobsPage = (_props: Props) => {
 
   useEffect(() => {
     queryClient.invalidateQueries({
-      queryKey: ['jobs', filterParams, searchQuery]
+      queryKey: ['jobs', filterParams, searchQuery, page]
     });
-  }, [filterParams, searchQuery, queryClient]);
+  }, [filterParams, searchQuery, queryClient, page]);
 
   const handleFilter = (budget?: number, deliveryTime?: number) => {
     setFilterParams(budget || deliveryTime ? { budget, deliveryTime } : {});
@@ -80,6 +86,12 @@ export const JobsPage = (_props: Props) => {
       toast.error('Failed to load job details');
     }
   }, [location.state?.jobLoadError]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage.toString());
+    // Scroll to top when page changes
+    window.scrollTo(0, 0);
+  };
 
   const isJobResponse = (data: GetJobsResponse): data is JobResponse => {
     return 'jobs' in data;
@@ -136,6 +148,13 @@ export const JobsPage = (_props: Props) => {
                   <JobsList jobs={jobsData.jobs} />
                 )}
               </div>
+              {jobsData && isJobResponse(jobsData) && (
+                <Pagination
+                  currentPage={jobsData.currentPage}
+                  totalPages={jobsData.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
             </div>
           </div>
         </div>

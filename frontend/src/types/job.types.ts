@@ -23,6 +23,8 @@ export interface Job {
 export interface JobResponse {
     jobs: Job[];
     total: number;
+    currentPage: number;
+    totalPages: number;
 }
 
 export interface CreateJobRequest {
@@ -35,6 +37,7 @@ export interface CreateJobRequest {
 export interface FilterJobsRequest {
     deliveryTime: number;
     budget: number;
+    page: number;
 }
 
 export type GetJobsResponse = JobResponse | ErrorResponse

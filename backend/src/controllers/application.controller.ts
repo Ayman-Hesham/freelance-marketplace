@@ -83,19 +83,31 @@ export const createApplication = asyncHandler(async (req: Request, res: Response
 
 export const getApplicationsByFreelancerId = asyncHandler(async (req: Request, res: Response) => {
     const freelancerId = req.user?.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6; // Keep consistent with other endpoints
+    const skip = (page - 1) * limit;
 
-    const applications = await Application.find({ freelancerId })
-    .sort({ createdAt: -1 })
-    .populate('jobId')
+    const [applications, total] = await Promise.all([
+        Application.find({ freelancerId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('jobId'),
+        Application.countDocuments({ freelancerId })
+    ]);
 
-    if (!applications) {
-        const error: ErrorWithStatus = new Error('No applications found');
-        error.status = 404;
-        throw error;
+    if (!applications.length) {
+        res.status(200).json({
+            jobs: [],
+            total: 0,
+            currentPage: page,
+            totalPages: 0
+        });
+        return;
     }
 
     const jobs = await Job.find({ _id: { $in: applications.map((application) => application.jobId) } })
-    .populate('clientId', 'name avatar');
+        .populate('clientId', 'name avatar');
 
     const jobsWithSignedUrls = await Promise.all(jobs.map(async (job) => {
         let avatarUrl = null;
@@ -126,12 +138,17 @@ export const getApplicationsByFreelancerId = asyncHandler(async (req: Request, r
 
     res.status(200).json({
         jobs: jobsWithSignedUrls,
-        total: jobs.length,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit)
     });
 });
 
 export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
         const error: ErrorWithStatus = new Error('Invalid job ID format');
@@ -146,14 +163,23 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
         throw error;
     }
 
-    const applications = await Application.find({ jobId: new mongoose.Types.ObjectId(id) })
-        .populate('freelancerId', 'name avatar')
-        .lean();
+    const [applications, total] = await Promise.all([
+        Application.find({ jobId: new mongoose.Types.ObjectId(id) })
+            .populate('freelancerId', 'name avatar')
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        Application.countDocuments({ jobId: new mongoose.Types.ObjectId(id) })
+    ]);
 
     if (!applications || applications.length === 0) {
-        const error: ErrorWithStatus = new Error('No applications found');
-        error.status = 404;
-        throw error;
+        res.status(200).json({
+            applications: [],
+            total: 0,
+            currentPage: page,
+            totalPages: 0
+        });
+        return;
     }
 
     const applicationsWithUrls = await Promise.all(applications.map(async (application) => {
@@ -182,7 +208,9 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
     if (applications.length === 1) {
         res.status(200).json({
             applications: applicationsWithUrls,
-            total: applicationsWithUrls.length
+            total,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit)
         });
         return;
     }
@@ -205,9 +233,10 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
 
         res.status(200).json({
             applications: rankedApplications,
-            total: rankedApplications.length
+            total,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit)
         });
-        return;
     } catch (error) {
         console.error('Error ranking applications:', error);
         const rankingError: ErrorWithStatus = new Error('Failed to rank applications');

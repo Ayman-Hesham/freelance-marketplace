@@ -8,15 +8,18 @@ import { ApplicationsByFreelancerIdResponse } from '../../types/application.type
 import { useLocation } from 'react-router-dom'
 import { PulseLoader } from 'react-spinners'
 import { useEffect } from 'react'
+import { useQueryState } from 'nuqs'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const FreelancerApplications = () => {
   const { user } = useAuth()
   const location = useLocation()
+  const [page, setPage] = useQueryState('page', { defaultValue: '1' })
   const applicationSuccess = location.state?.applicationSuccess
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['applications', 'freelancer', user!.id],
-    queryFn: () => getApplicationsByFreelancerId(user!.id),
+    queryKey: ['applications', 'freelancer', user!.id, page],
+    queryFn: () => getApplicationsByFreelancerId(user!.id, parseInt(page)),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   })
@@ -37,6 +40,11 @@ const FreelancerApplications = () => {
 
   const isJobResponse = (data: ApplicationsByFreelancerIdResponse): data is JobResponse => {
     return 'jobs' in data;
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage.toString())
+    window.scrollTo(0, 0)
   }
 
   if (isLoading) return (
@@ -68,9 +76,46 @@ const FreelancerApplications = () => {
           </div>
           <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
             {jobsData && isJobResponse(jobsData) && (
-              <JobsList 
-                jobs={jobsData.jobs} 
-              />
+              <>
+                <JobsList jobs={jobsData.jobs} />
+                
+                {/* Pagination Controls */}
+                {jobsData.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => handlePageChange(jobsData.currentPage - 1)}
+                      disabled={jobsData.currentPage === 1}
+                      className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: jobsData.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1 rounded-md ${
+                            jobsData.currentPage === pageNum
+                              ? 'bg-secondary-500 text-white'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(jobsData.currentPage + 1)}
+                      disabled={jobsData.currentPage === jobsData.totalPages}
+                      className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
