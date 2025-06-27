@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/Freelance-marketplace';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 interface DatabaseConfig {
   connect: () => Promise<void>;
@@ -13,7 +13,7 @@ interface DatabaseConfig {
 export const database: DatabaseConfig = {
   connect: async (): Promise<void> => {
     try {
-      await mongoose.connect(MONGODB_URI);
+      await mongoose.connect(MONGODB_URI as string);
       console.log('Connected to MongoDB successfully');
     } catch (error) {
       console.error('MongoDB Atlas connection error:', error);

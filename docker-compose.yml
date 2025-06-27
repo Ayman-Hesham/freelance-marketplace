@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro  # For SSL certificates
+      - ./logs/nginx:/var/log/nginx  # For nginx logs
+    depends_on:
+      - backend
+    restart: always
+    environment:
+      - VITE_API_URL=https://freelance-marketplace.my/api
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    expose:
+      - "5000"  # Only expose to internal network
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./logs/backend:/app/logs
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DOMAIN=https://freelance-marketplace.my
+      # Add your other environment variables
+      - DATABASE_URL=${DATABASE_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
+
+volumes:
+  uploads:
+  logs:
+
+networks:
+  default:
+    driver: bridge

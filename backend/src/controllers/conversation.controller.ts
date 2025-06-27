@@ -2,7 +2,6 @@ import asyncHandler from 'express-async-handler';
 import Conversation from '../models/conversation.model';
 import { ErrorWithStatus } from '../types/error.types';
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import { getSignedDownloadUrl } from '../services/s3.service';
 import Message from '../models/message.model';
 
@@ -13,7 +12,8 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     $or: [
       { clientId: userId },
       { freelancerId: userId }
-    ]
+    ],
+    status: 'active'
   })
   .populate('clientId', 'name avatar')
   .populate('freelancerId', 'name avatar') 

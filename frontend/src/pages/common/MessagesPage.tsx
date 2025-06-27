@@ -78,7 +78,6 @@ export const MessagesPage = () => {
     if (!socket) return;
 
     const handleReceiveMessage = (message: Message) => {
-      // Update messages list
       queryClient.setQueryData(
         ['messages', message.conversationId],
         (oldMessages: Message[] = []) => {
@@ -87,32 +86,26 @@ export const MessagesPage = () => {
         }
       );
 
-      // Invalidate conversations query to refresh last messages
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
 
-      // Scroll to bottom after message is added
       setTimeout(() => {
         scrollToBottom();
       }, 100);
 
-      // Add this to update unread count
       resetUnreadCount();
     };
 
     const handleMessageSent = (data: { messageId: string, message: Message }) => {
       const { messageId, message } = data;
       
-      // Update messages cache
       queryClient.setQueryData(
         ['messages', message.conversationId],
         (oldMessages: Message[] = []) => 
           oldMessages?.map(msg => msg.id === messageId ? message : msg) || []
       );
 
-      // Invalidate conversations query to refresh last messages
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
 
-      // Scroll to bottom after message is sent
       setTimeout(() => {
         scrollToBottom();
       }, 100);
@@ -160,7 +153,6 @@ export const MessagesPage = () => {
       status: 'sending'
     };
 
-    // Add optimistic update
     queryClient.setQueryData(
       ['messages', conversationId],
       (old: Message[] = []) => [...old, optimisticMessage]
@@ -169,7 +161,6 @@ export const MessagesPage = () => {
     try {
       await sendSocketMessage(conversationId, content);
       
-      // Update message status to sent
       queryClient.setQueryData(
         ['messages', conversationId],
         (old: Message[] = []) => old.map(msg => 
@@ -179,7 +170,6 @@ export const MessagesPage = () => {
         )
       );
     } catch (error) {
-      // Update message status to failed or remove it
       queryClient.setQueryData(
         ['messages', conversationId],
         (old: Message[] = []) => old.map(msg => 
@@ -202,15 +192,13 @@ export const MessagesPage = () => {
     ? typingUsers.get(selectedConversation.id)?.has(otherUser?.id || '') || false
     : false;
 
-  // Add this function to handle scrolling
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Scroll when messages change
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); // Dependency on messages array
+  }, [messages]);
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-100 px-4 md:px-8 py-4 -mt-4">

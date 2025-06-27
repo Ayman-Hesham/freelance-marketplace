@@ -4,12 +4,13 @@ import { getApplicationsByJobId } from '../../services/application.service'
 import { PulseLoader } from 'react-spinners'
 import { JobsList } from '../../components/common/JobsList'
 import { ApplicationByJobIdResponse, ApplicationsResponse } from '../../types/application.types'
-import { useQueryState } from 'nuqs'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const JobApplicationsPage = () => {
   const { id } = useParams()
-  const [page, setPage] = useQueryState('page', { defaultValue: '1' })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = searchParams.get('page') || '1'
 
   const { data: applications, isLoading } = useQuery({
     queryKey: ['applications', 'job', id, page],
@@ -19,7 +20,10 @@ const JobApplicationsPage = () => {
   })
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage.toString())
+    setSearchParams(prev => {
+      prev.set('page', newPage.toString())
+      return prev
+    })
     window.scrollTo(0, 0)
   }
 
@@ -44,7 +48,6 @@ const JobApplicationsPage = () => {
               <>
                 <JobsList jobs={applications.applications} />
                 
-                {/* Pagination Controls */}
                 {applications.totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-6">
                     <button

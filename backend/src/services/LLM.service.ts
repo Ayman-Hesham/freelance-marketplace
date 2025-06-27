@@ -7,8 +7,8 @@ interface RankingResult {
   }>;
 }
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const GEMINI_API_KEY = "AIzaSyAl3zgJaK71jfjDfHFtV2_UnfGUjDe64rQ"
 
 async function generateResponse(
   prompt: string,
@@ -22,18 +22,14 @@ async function generateResponse(
     error.status = 500;
     throw error;
   }
-1
+
   try {
     const combinedPrompt = `${systemMessage}\n\n${prompt}`;
 
-    const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
+    const url = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
     const headers = {
       'Content-Type': 'application/json'
     };
-
-    const params = new URLSearchParams({
-      key: GEMINI_API_KEY
-    });
 
     const data = {
       contents: [
@@ -51,13 +47,15 @@ async function generateResponse(
       }
     };
 
-    const response = await fetch(`${url}?${params}`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(data)
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API Error:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 

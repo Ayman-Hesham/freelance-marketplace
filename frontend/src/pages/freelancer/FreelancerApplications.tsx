@@ -5,16 +5,16 @@ import { JobsList } from '../../components/common/JobsList'
 import { useAuth } from '../../hooks/useAuth'
 import { JobResponse } from '../../types/job.types'
 import { ApplicationsByFreelancerIdResponse } from '../../types/application.types'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { PulseLoader } from 'react-spinners'
 import { useEffect } from 'react'
-import { useQueryState } from 'nuqs'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const FreelancerApplications = () => {
   const { user } = useAuth()
   const location = useLocation()
-  const [page, setPage] = useQueryState('page', { defaultValue: '1' })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = searchParams.get('page') || '1'
   const applicationSuccess = location.state?.applicationSuccess
 
   const { data: jobsData, isLoading } = useQuery({
@@ -43,7 +43,10 @@ const FreelancerApplications = () => {
   }
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage.toString())
+    setSearchParams(prev => {
+      prev.set('page', newPage.toString());
+      return prev;
+    });
     window.scrollTo(0, 0)
   }
 
@@ -79,7 +82,6 @@ const FreelancerApplications = () => {
               <>
                 <JobsList jobs={jobsData.jobs} />
                 
-                {/* Pagination Controls */}
                 {jobsData.totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-6">
                     <button

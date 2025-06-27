@@ -400,6 +400,17 @@ export const submitDeliverable = asyncHandler(async (req: Request, res: Response
             throw error;
         }
 
+        const conversation = await Conversation.findOne({ jobId: job._id }).session(session);
+
+        if(!conversation) {
+            const error: ErrorWithStatus = new Error('Conversation not found');
+            error.status = 404;
+            throw error;
+        }
+        
+        conversation.status = 'closed';
+        await conversation.save({ session });
+
         application.deliveredWork = deliverableKey!;
         application.status = 'Pending Approval';
         await application.save({ session });

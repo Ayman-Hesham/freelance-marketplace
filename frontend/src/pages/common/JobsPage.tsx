@@ -9,7 +9,6 @@ import { PulseLoader } from 'react-spinners';
 import { X } from "lucide-react";
 import { useLocation } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
-import { useQueryState } from 'nuqs';
 import { Pagination } from '../../components/common/Pagination';
 
 interface Props {}
@@ -18,7 +17,7 @@ export const JobsPage = (_props: Props) => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q');
-  const [page, setPage] = useQueryState('page', { defaultValue: '1' });
+  const page = searchParams.get('page') || '1';
   const location = useLocation();
   
   const [filterParams, setFilterParams] = useState<{
@@ -88,8 +87,10 @@ export const JobsPage = (_props: Props) => {
   }, [location.state?.jobLoadError]);
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage.toString());
-    // Scroll to top when page changes
+    setSearchParams(prev => {
+      prev.set('page', newPage.toString());
+      return prev;
+    });
     window.scrollTo(0, 0);
   };
 

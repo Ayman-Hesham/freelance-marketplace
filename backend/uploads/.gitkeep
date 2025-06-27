@@ -1,0 +1,5 @@
+   # Ignore everything in uploads directory
+   backend/uploads/*
+   
+   # But keep the .gitkeep file
+   !backend/uploads/.gitkeep

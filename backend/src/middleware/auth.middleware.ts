@@ -8,19 +8,19 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
                   (req.headers.authorization?.startsWith('Bearer') ? 
                     req.headers.authorization.split(' ')[1] : null);
 
-    if (!token) {
-      const error: ErrorWithStatus = new Error('Not authorized, no token provided');
-      error.status = 401;
-      throw error;
-    }
+  if (!token) {
+    const error: ErrorWithStatus = new Error('Not authorized, no token provided');
+    error.status = 401;
+    throw error;
+  }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+  const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
     
     req.user = {
       id: decoded.id
     };
     
-    next();
+  next();
   } catch (error) {
     if (error instanceof Error) {
       const typedError: ErrorWithStatus = error;

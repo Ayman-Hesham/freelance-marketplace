@@ -10,8 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { GetJobsResponse, JobResponse } from '../../types/job.types'
 import { PulseLoader } from 'react-spinners'
 import { DeleteJobDialog } from '../../components/dialogs/DeleteJobDialog'
-import { useLocation } from 'react-router-dom'
-import { useQueryState } from 'nuqs'
+import { useLocation, useSearchParams } from 'react-router-dom'
 
 export const ClientJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -19,7 +18,8 @@ export const ClientJobs = () => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const location = useLocation()
-  const [page, setPage] = useQueryState('page', { defaultValue: '1' })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = searchParams.get('page') || '1'
   const jobDeleted = location.state?.jobDeleted
   const ApplicationAccepted = location.state?.ApplicationAccepted
 
@@ -65,8 +65,10 @@ export const ClientJobs = () => {
   }
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage.toString())
-    // Scroll to top when page changes
+    setSearchParams(prev => {
+      prev.set('page', newPage.toString())
+      return prev
+    })
     window.scrollTo(0, 0)
   }
 
@@ -135,7 +137,6 @@ export const ClientJobs = () => {
                   onDeleteJob={handleDeleteClick}
                 />
                 
-                {/* Pagination Controls */}
                 {jobsData.totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-6">
                     <button

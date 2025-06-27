@@ -26,7 +26,7 @@ export const Navbar = (_props: Props) => {
 
  const handleLogout = async () => {
    await logout();
-   navigate('/'); // Redirect to home page after logout
+   navigate('/'); 
  };
 
  const MessageIcon = () => (
