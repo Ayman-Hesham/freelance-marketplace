@@ -139,7 +139,7 @@ DATABASE_URL=your_mongodb_connection_string
    - Backend API: http://localhost:5000
 
 ## 📁 Project Structure
-
+```bash
 freelance-marketplace/
 ├── backend/ # Node.js Express API
 │ ├── src/
@@ -166,7 +166,7 @@ freelance-marketplace/
 ├── docker-compose.yml # Multi-container Docker setup
 ├── deploy.sh # Deployment script
 └── backup.sh # Database backup script
-
+```
 ## 🔥 Key Features Deep Dive
 
 ### Job Workflow
