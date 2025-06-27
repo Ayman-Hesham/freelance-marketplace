@@ -3,7 +3,7 @@ import { handleApiError } from '../utils/api.error.handler';
 import { getConversationsResponse } from '../types/conversation.types';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'http://freelance-marketplace.my/api',
     headers: {
         'Content-Type': 'application/json',
     },

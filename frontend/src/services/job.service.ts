@@ -9,7 +9,7 @@ import { GetJobsResponse,
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'http://freelance-marketplace.my/api',
     headers: {
         'Content-Type': 'application/json',
     },
