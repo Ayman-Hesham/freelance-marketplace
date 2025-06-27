@@ -33,7 +33,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user || socket?.connected) return;
 
     try {
-      const newSocket = io('http://backend:5000', {
+      const newSocket = io('https://freelance-marketplace.my/api', {
         transports: ['websocket'],
         timeout: 20000,
         withCredentials: true,
