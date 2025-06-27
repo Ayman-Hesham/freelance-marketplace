@@ -10,7 +10,9 @@ const userSockets = new Map<string, string>();
 export function initializeSocket(server: HttpServer) {
   const io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL,
+      origin: process.env.NODE_ENV === 'production' 
+      ? 'https://freelance-marketplace.my'
+      : 'http://localhost:5173',
       credentials: true
     }
   });
