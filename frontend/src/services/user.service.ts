@@ -3,7 +3,7 @@ import { UpdateProfileResponse, FileDownloadResponse } from "../types/profile.ty
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
-    baseURL: 'http://freelance-marketplace.my/api',
+    baseURL: 'https://freelance-marketplace.my/api',
     withCredentials: true,
 });
 

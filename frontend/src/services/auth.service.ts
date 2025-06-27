@@ -3,7 +3,7 @@ import { RegistrationForm, LoginForm, RegisterResponse, LoginResponse } from '..
 import { handleApiError } from '../utils/api.error.handler';
 
 const apiClient = axios.create({
-    baseURL: 'http://freelance-marketplace.my/api',
+    baseURL: 'https://freelance-marketplace.my/api',
     headers: {
       'Content-Type': 'application/json',
     },
