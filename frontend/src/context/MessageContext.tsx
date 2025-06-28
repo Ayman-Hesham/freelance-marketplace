@@ -35,6 +35,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const newSocket = io('https://freelance-marketplace.my', {
         transports: ['websocket'],
+        path: '/socket.io/',
         timeout: 20000,
         withCredentials: true,
         reconnection: true,
