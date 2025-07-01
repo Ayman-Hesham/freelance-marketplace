@@ -2,9 +2,9 @@
 
 A modern, full-stack freelance marketplace platform that connects clients with talented freelancers. Built with React, Node.js, and powered by AI for intelligent application ranking.
 
-## 🌟 Product Overview
+## 🌟 Overview
 
-The Freelance Marketplace is a comprehensive platform designed to streamline the process of hiring freelancers and finding freelance work. It provides a seamless experience for both clients posting jobs and freelancers looking for opportunities.
+Freelance Marketplace is a comprehensive platform designed to streamline the process of hiring freelancers and finding freelance work. It provides a seamless experience for both clients posting jobs and freelancers looking for opportunities.
 
 ### Key Features
 
@@ -27,7 +27,6 @@ The Freelance Marketplace is a comprehensive platform designed to streamline the
 
 ### Frontend Stack
 - **React 18** with **TypeScript** for type-safe development
-- **Vite** for fast development and building
 - **Tailwind CSS** for styling with **Radix UI** components
 - **React Router** for navigation
 - **TanStack Query** for server state management
