@@ -41,11 +41,6 @@ const userSchema = new mongoose.Schema<IUser>({
     portfolio: {
         type: String,
         default: null
-    },
-    sentiment: {
-        type: String,
-        enum: ['1', '2', '3', '4', '5'],
-        default: '5'
     }
 }, {
     timestamps: true,
