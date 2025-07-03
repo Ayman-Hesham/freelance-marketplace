@@ -52,8 +52,8 @@ export const JobDetailsPage = () => {
 
     try {
       await deleteJob(jobToDelete)
-      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id], exact: false })
+      queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false })
       navigate('/my-jobs', {
         state: {
           from: location.pathname,
@@ -74,7 +74,7 @@ export const JobDetailsPage = () => {
   const handleCloseModal = (wasCreated = false) => {
     setIsModalOpen(false)
     if (wasCreated) {
-        queryClient.invalidateQueries({ queryKey: ['applications', user!.id] })
+        queryClient.invalidateQueries({ queryKey: ['applications', user!.id], exact: false })
         navigate('/my-applications', { 
             state: { 
                 from: location.pathname,
@@ -128,9 +128,11 @@ export const JobDetailsPage = () => {
 
         const cachedJob = queryClient.getQueryData(['job', id])
         const freelancerId = (cachedJob as Job)?.freelancerId
+        const clientId = (cachedJob as Job)?.poster.id
 
         queryClient.invalidateQueries({ queryKey: ['job', id] })
-        queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId] })
+        queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId], exact: false })
+        queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId], exact: false })
         setIsSubmitSuccess(true)
     } catch (error) {
         console.error('Submission error:', error)
@@ -191,15 +193,15 @@ export const JobDetailsPage = () => {
       }
       
       const cachedJob = queryClient.getQueryData(['job', id])
-    const clientId = (cachedJob as Job)?.poster.id
+      const clientId = (cachedJob as Job)?.poster.id
 
     if (clientId) {
-        queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId] })
+        queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId], exact: false })
     }
 
     queryClient.invalidateQueries({ queryKey: ['job', id] })
-    queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', user!.id] })
-    queryClient.invalidateQueries({ queryKey: ['applications', 'job', id] })
+    queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', user!.id], exact: false })
+    queryClient.invalidateQueries({ queryKey: ['applications', 'job', id], exact: false })
     setIsAcceptSuccess(true)    
     } catch (error) {
       toast.error('Failed to accept job')
