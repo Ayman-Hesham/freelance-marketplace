@@ -108,8 +108,8 @@ const ApplicationModal = ({ onClose }: Props) => {
             }
 
             queryClient.invalidateQueries({ queryKey: ['job', id] })
-            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', user!.id] })
-            queryClient.invalidateQueries({ queryKey: ['applications', 'job', id] })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', user!.id], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'job', id], exact: false })
             onClose(true)
         } catch (error) {
             console.error('Creation error:', error)

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useQueryClient } from "@tanstack/react-query"
 import { useParams, useLocation, useNavigate } from "react-router-dom"
-import { ApplicationByJobIdResponse, ApplicationsResponse } from "../../types/application.types"
+import { Application, ApplicationByJobIdResponse } from "../../types/application.types"
 import { PulseLoader } from "react-spinners"
 import { JobsList } from "../../components/common/JobsList"
 import { useState } from "react"
@@ -39,10 +39,10 @@ const ApplicationDetailsPage = () => {
             } else {
                 await Promise.all([
                     queryClient.invalidateQueries({ queryKey: ['job', jobId] }),
-                    queryClient.invalidateQueries({ queryKey: ['applications', 'job', jobId] }),
-                    queryClient.invalidateQueries({ queryKey: ['jobs'] }),
-                    queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer'] }),
-                    queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
+                    queryClient.invalidateQueries({ queryKey: ['applications', 'job', jobId], exact: false }),
+                    queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false }),
+                    queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer'], exact: false }),
+                    queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id], exact: false })
                 ]);
 
                 setApplicationToAccept(null);
@@ -59,32 +59,29 @@ const ApplicationDetailsPage = () => {
     const { data: application, isLoading: isApplicationLoading } = useQuery({
         queryKey: ['application', jobId, applicationId],
         queryFn: () => {
-            const cachedApplications = queryClient.getQueryData<ApplicationByJobIdResponse>(
-                ['applications', 'job', jobId]
-            )
+            const queriesData = queryClient.getQueriesData<ApplicationByJobIdResponse>({
+                queryKey: ['applications', 'job', jobId],
+                exact: false
+            });
 
-            if (!cachedApplications || !isApplicationResponse(cachedApplications)) {
-                return null
+            for (const [, data] of queriesData) {
+                if (data && 'applications' in data && Array.isArray(data.applications)) {
+                    const targetApplication = data.applications.find(
+                        (app: Application) => app.id === applicationId
+                    );
+                    if (targetApplication) {
+                        return targetApplication;
+                    }
+                }
             }
-
-            const targetApplication = cachedApplications.applications.find(
-                app => app.id === applicationId
-            )
-
-            if (!targetApplication) {
-                return null
-            }
-
-            return targetApplication
+            
+            console.log('No application found in cache');
+            return null;
         },
         enabled: !!jobId && !!applicationId,
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 30,
     })
-
-    const isApplicationResponse = (data: ApplicationByJobIdResponse): data is ApplicationsResponse => {
-        return data && 'applications' in data && Array.isArray(data.applications)
-    }
 
     if (isApplicationLoading) return (
         <div className="h-screen flex items-center justify-center">

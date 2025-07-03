@@ -34,8 +34,8 @@ export const BlockJobModal = ({ onClose }: BlockJobModalProps) => {
             const clientId = (cachedJob as Job)?.poster.id
 
             queryClient.invalidateQueries({ queryKey: ['job', id] })
-            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId] })
-            queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId] })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['clientJobs', clientId], exact: false })
             onClose(true)
         } catch (error) {
             console.error('Block job error:', error)

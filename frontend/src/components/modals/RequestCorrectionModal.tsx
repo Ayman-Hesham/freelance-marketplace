@@ -35,8 +35,8 @@ export const RequestCorrectionModal = ({ onClose }: RequestCorrectionModalProps)
             const freelancerId = (cachedJob as Job)?.freelancerId
 
             queryClient.invalidateQueries({ queryKey: ['job', id] })
-            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId] })
-            queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
+            queryClient.invalidateQueries({ queryKey: ['applications', 'freelancer', freelancerId], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id], exact: false })
             onClose(true)
         } catch (error) {
             console.error('Correction request error:', error)

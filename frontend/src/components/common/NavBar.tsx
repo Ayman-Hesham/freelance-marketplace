@@ -57,6 +57,7 @@ export const Navbar = (_props: Props) => {
           <div className="relative">
             <input
               type="text"
+              name="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}

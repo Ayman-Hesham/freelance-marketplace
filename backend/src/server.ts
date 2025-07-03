@@ -14,10 +14,10 @@ dotenv.config();
 
 const app: Express = express();
 const port: number = parseInt(process.env.PORT || '5000', 10);
-const corsOptions ={
-    origin:'https://freelance-marketplace.my', 
-    credentials:true,         
-    optionSuccessStatus:200
+const corsOptions = {
+    origin:'https://freelance-marketplace.my',
+    credentials: true,
+    optionSuccessStatus: 200
 }
 
 app.use(cors(corsOptions));

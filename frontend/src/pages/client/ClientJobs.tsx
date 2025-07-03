@@ -33,8 +33,8 @@ export const ClientJobs = () => {
   const handleCloseModal = (wasCreated = false) => {
     setIsModalOpen(false)
     if (wasCreated) {
-      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id], exact: false })
+      queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false })
       setTimeout(() => {
         toast.success('Job created successfully')
       }, 100)
@@ -46,8 +46,8 @@ export const ClientJobs = () => {
 
     try {
       await deleteJob(jobToDelete)
-      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id] })
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['clientJobs', user!.id], exact: false })
+      queryClient.invalidateQueries({ queryKey: ['jobs'], exact: false })
       toast.success('Job deleted successfully')
     } catch (error) {
       toast.error('Failed to delete job')
