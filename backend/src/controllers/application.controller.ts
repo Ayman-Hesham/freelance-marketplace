@@ -463,24 +463,22 @@ export const acceptDeliverable = asyncHandler(async (req: Request, res: Response
     session.startTransaction();
 
     try {
-        const application = await Application.findById(
-            new mongoose.Types.ObjectId(id)
-        ).session(session);
-
-        if (!application) {
-            const error: ErrorWithStatus = new Error('Application not found');
-            error.status = 404;
-            throw error;
-        }
-
         const job = await Job.findByIdAndUpdate(
-            application.jobId,
+            new mongoose.Types.ObjectId(id),
             { status: 'Completed' },
             { session, new: true }
         );
 
         if (!job) {
             const error: ErrorWithStatus = new Error('Job not found');
+            error.status = 404;
+            throw error;
+        }
+
+        const application = await Application.findOne({ jobId: job._id, status: { $in: ['Pending Approval', 'Correction'] } }).session(session);
+
+        if (!application) {
+            const error: ErrorWithStatus = new Error('Application not found');
             error.status = 404;
             throw error;
         }
