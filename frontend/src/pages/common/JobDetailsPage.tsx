@@ -43,8 +43,10 @@ export const JobDetailsPage = () => {
     queryKey: ['job', id],
     queryFn: () => getJobById(id!, isApplication),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
   const handleDeleteJob = async () => {

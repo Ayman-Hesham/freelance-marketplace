@@ -15,7 +15,7 @@ const JobApplicationsPage = () => {
   const { data: applications, isLoading } = useQuery({
     queryKey: ['applications', 'job', id, page],
     queryFn: () => getApplicationsByJobId(id!, parseInt(page)),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 30,
     gcTime: 1000 * 60 * 30,
   })
 

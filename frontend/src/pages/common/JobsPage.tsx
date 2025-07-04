@@ -59,8 +59,10 @@ export const JobsPage = (_props: Props) => {
 
       return response;
     },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {

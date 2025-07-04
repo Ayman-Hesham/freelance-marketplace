@@ -20,8 +20,10 @@ const FreelancerApplications = () => {
   const { data: jobsData, isLoading } = useQuery({
     queryKey: ['applications', 'freelancer', user!.id, page],
     queryFn: () => getApplicationsByFreelancerId(user!.id, parseInt(page)),
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
   useEffect(() => {
