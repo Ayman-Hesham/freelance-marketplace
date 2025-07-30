@@ -3,7 +3,7 @@ set -e
 
 echo "Starting application..."
 
-cd /opt/your-app
+cd /home/ubuntu/freelance-marketplace
 
 # Create necessary directories
 echo "Creating necessary directories..."
