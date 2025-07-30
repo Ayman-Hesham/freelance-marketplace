@@ -2,22 +2,22 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /freelance-marketplace
+    destination: /home/ubuntu/freelance-marketplace
     overwrite: yes
 permissions:
-  - object: /freelance-marketplace
+  - object: /home/ubuntu/freelance-marketplace
     owner: ubuntu
     group: ubuntu
     mode: 755
     type:
       - directory
-  - object: /freelance-marketplace/scripts
+  - object: /home/ubuntu/freelance-marketplace/scripts
     owner: ubuntu
     group: ubuntu
     mode: 755
     type:
       - directory
-  - object: /freelance-marketplace/scripts/*.sh
+  - object: /home/ubuntu/freelance-marketplace/scripts/*.sh
     owner: ubuntu
     group: ubuntu
     mode: 755
