@@ -15,7 +15,7 @@ dotenv.config();
 const app: Express = express();
 const port: number = parseInt(process.env.PORT || '5000', 10);
 const corsOptions = {
-    origin:'https://freelance-marketplace.my',
+    origin: process.env.NODE_ENV === 'production' ? 'https://freelance-marketplace.my' : 'http://localhost:5173',
     credentials: true,
     optionSuccessStatus: 200
 }

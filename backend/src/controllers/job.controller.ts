@@ -54,9 +54,11 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
     const applicationStatus = application?.status;
     
-    let deliverable = null;
-    if ((job.status === 'Pending Approval' || job.status === 'Completed') && application?.deliveredWork) {
-        deliverable = await getSignedDownloadUrl(application?.deliveredWork!);
+    let deliverablesList: string[] = [];
+    if (job.status === 'Pending Approval' || job.status === 'Completed' || job.status === 'Correction'){
+        for (const deliverableKey of application?.deliveredWork!){
+            deliverablesList.push(await getSignedDownloadUrl(deliverableKey));
+        }
     }
 
     const id_ = isApplication ? application?._id : job._id;
@@ -71,7 +73,7 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
         status: applicationStatus ? applicationStatus : job.status,
         hasApplications: job.applications.length > 0,
         hasApplied: hasApplied,
-        deliverable: deliverable,
+        deliverable: deliverablesList,
         correctionMessage: application?.correctionMessage,
         blockMessage: job.blockMessage,
         poster: {

@@ -10,7 +10,7 @@ interface CreateJobModalProps {
 
 export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const { register, handleSubmit, formState: { errors } } = useForm<CreateJobRequest>()
+    const { register, handleSubmit, formState: { errors }, watch } = useForm<CreateJobRequest & { termsAccepted: boolean }>()
   
     const onSubmit = async (data: CreateJobRequest) => {
       setIsSubmitting(true)
@@ -27,6 +27,8 @@ export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
         setIsSubmitting(false)
       }
     }
+  
+    const termsAccepted = watch('termsAccepted')
   
     return (
       <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
@@ -129,6 +131,32 @@ export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
             </div>
           </div>
 
+          <div className="flex items-start gap-2">
+              <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  className="mt-1"
+                  {...register("termsAccepted", {
+                      required: "You must accept the Terms and Conditions"
+                  })}
+                  disabled={isSubmitting}
+              />
+              <label htmlFor="termsAccepted" className="text-sm text-gray-700">
+                  I agree to the{" "}
+                  <a 
+                      href="https://571600844773.s3.ap-southeast-1.amazonaws.com/TermsAndConditions/TAC.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700 underline"
+                  >
+                      Terms and Conditions
+                  </a>
+              </label>
+          </div>
+          {errors.termsAccepted && (
+              <p className="mt-1 text-sm text-red-600">{errors.termsAccepted.message}</p>
+          )}
+
           <div className="mt-8 flex justify-end gap-4">
             <button
               type="button"
@@ -141,7 +169,7 @@ export const CreateJobModal = ({ onClose }: CreateJobModalProps) => {
             <button
               type="submit"
               className="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed min-w-[120px]"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !termsAccepted}
             >
               {isSubmitting ? (
                 <PulseLoader color="#222E50" size={10} />

@@ -4,6 +4,7 @@ interface RankingResult {
   ranking: Array<{
     id: string;
     rank: number;
+    reason: string;
   }>;
 }
 
@@ -12,7 +13,7 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models
 
 async function generateResponse(
   prompt: string,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.0-flash-lite",
   temperature = 0.3,
   maxTokens = 5000,
   systemMessage: string
@@ -92,7 +93,7 @@ async function generateResponse(
 }
 
 export async function rankApplications(jobDescription: string, applications: Array<{ id: string, coverLetter: string }>): Promise<RankingResult> {
-  const jobRankingSystem = "You are a job application ranking AI. Analyze cover letters against job requirements and return a JSON ranking response. Be concise and direct. Always return valid JSON format.";
+  const jobRankingSystem = "You are a job application ranking AI. Analyze cover letters against job requirements and return a JSON ranking response while providing a brief reason for each ranking. Be concise and direct. Always return valid JSON format.";
   
   const prompt = `
     Rank applicants from best (1) to worst based on: technical skills match, experience level, project relevance.
@@ -101,9 +102,9 @@ export async function rankApplications(jobDescription: string, applications: Arr
     \`\`\`json
     {
     "ranking": [
-        {"id": "ID_HERE", "rank": 1},
-        {"id": "ID_HERE", "rank": 2},
-        {"id": "ID_HERE", "rank": 3}
+        {"id": "ID_HERE", "rank": 1, "reason": "REASON_HERE"},
+        {"id": "ID_HERE", "rank": 2, "reason": "REASON_HERE"},
+        {"id": "ID_HERE", "rank": 3, "reason": "REASON_HERE"}
     ]
     }
     \`\`\`
@@ -128,7 +129,7 @@ export async function rankApplications(jobDescription: string, applications: Arr
   try {
     const response = await generateResponse(
       prompt,
-      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite",
       0.3,
       5000,
       jobRankingSystem

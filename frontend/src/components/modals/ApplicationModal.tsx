@@ -21,7 +21,7 @@ const ApplicationModal = ({ onClose }: Props) => {
     const [portfolioFileName, setPortfolioFileName] = useState<string | null>(null)
     const [portfolioError, setPortfolioError] = useState<string | null>(null)
     const portfolioInputRef = useRef<HTMLInputElement>(null)
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<CreateApplicationRequest>()
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<CreateApplicationRequest & { termsAccepted: boolean }>()
     const queryClient = useQueryClient()
     const { user } = useAuth()
 
@@ -117,6 +117,8 @@ const ApplicationModal = ({ onClose }: Props) => {
             setIsSubmitting(false)
         }
     }
+
+    const termsAccepted = watch('termsAccepted')
       
     return (
         <>
@@ -210,6 +212,32 @@ const ApplicationModal = ({ onClose }: Props) => {
                         </p>
                     </div>
 
+                    <div className="flex items-start gap-2">
+                        <input
+                            type="checkbox"
+                            id="termsAccepted"
+                            className="mt-1"
+                            {...register("termsAccepted", {
+                                required: "You must accept the Terms and Conditions"
+                            })}
+                            disabled={isSubmitting}
+                        />
+                        <label htmlFor="termsAccepted" className="text-sm text-gray-700">
+                            I agree to the{" "}
+                            <a 
+                                href="https://571600844773.s3.ap-southeast-1.amazonaws.com/TermsAndConditions/TAC.pdf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:text-blue-700 underline"
+                            >
+                                Terms and Conditions
+                            </a>
+                        </label>
+                    </div>
+                    {errors.termsAccepted && (
+                        <p className="mt-1 text-sm text-red-600">{errors.termsAccepted.message}</p>
+                    )}
+
                     <div className="mt-8 flex justify-end gap-4">
                         <button
                             type="button"
@@ -221,8 +249,8 @@ const ApplicationModal = ({ onClose }: Props) => {
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center justify-center bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:cursor-not-allowed min-w-[120px]"
-                            disabled={isSubmitting}
+                            className="flex items-center justify-center bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50 min-w-[120px]"
+                            disabled={isSubmitting || !termsAccepted}
                         >
                             {isSubmitting || isLoadingLastApplication ? (
                                 <PulseLoader color="#fff" size={10} />

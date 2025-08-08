@@ -56,7 +56,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       newSocket.on('connect_error', (error) => {
         console.error('Socket connection error:', error);
         setIsConnected(false);
-        // Don't throw error - just log it
       });
 
       newSocket.on('online-users', (users: string[]) => {
@@ -102,9 +101,8 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setSocket(newSocket);
     } catch (error) {
       console.error('Failed to create socket connection:', error);
-      // Don't throw - let the app continue to work without socket
     }
-  }, [user]); // Remove reconnectAttempts from dependencies
+  }, [user]); 
 
   useEffect(() => {
     if (user) {
@@ -118,7 +116,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsConnected(false);
       }
     };
-  }, [user]); // Simplified dependencies
+  }, [user]); 
 
   const joinConversation = useCallback((conversationId: string) => {
     if (socket && isConnected) {
@@ -165,7 +163,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         messageId
       });
 
-      // Timeout after 10 seconds
       setTimeout(() => {
         socket.off('message-sent', handleSuccess);
         socket.off('message-error', handleError);
@@ -186,7 +183,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [socket, isConnected]);
 
-  // Add logout handler
   const handleLogout = useCallback(() => {
     if (socket && isConnected) {
       socket.emit('logout');
@@ -199,14 +195,12 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [socket, isConnected]);
 
-  // Add this effect to handle auth state changes
   useEffect(() => {
     if (!user) {
       handleLogout();
     }
   }, [user, handleLogout]);
 
-  // Update currentConversationId when viewing messages
   useEffect(() => {
     const isOnMessagesPage = window.location.pathname === '/messages';
     if (!isOnMessagesPage) {

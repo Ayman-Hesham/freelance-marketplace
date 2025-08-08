@@ -9,8 +9,8 @@ export interface Job {
     status: string;
     hasApplications?: boolean;
     hasApplied?: boolean;
-    deliverable?: string;
-    correctionMessage?: string;
+    deliverable?: string[];
+    correctionMessage?: string[];
     freelancerId?: string;
     blockMessage?: string;
     poster: {

@@ -14,6 +14,7 @@ import { acceptDeliverable, submitDeliverable } from '../../services/application
 import { CompleteJobDialog } from '../../components/dialogs/CompleteJobDialog'
 import { RequestCorrectionModal } from '../../components/modals/RequestCorrectionModal'
 import { BlockJobModal } from '../../components/modals/BlockJobModal'
+import { CorrectionHistoryModal } from '../../components/modals/CorrectionHistoryModal'
 
 
 export const JobDetailsPage = () => {
@@ -38,6 +39,7 @@ export const JobDetailsPage = () => {
   const [isBlockingJob, setIsBlockingJob] = useState(false)
   const [isSubmitSuccess, setIsSubmitSuccess] = useState(false)
   const [isAcceptSuccess, setIsAcceptSuccess] = useState(false)
+  const [isCorrectionHistoryOpen, setIsCorrectionHistoryOpen] = useState(false)
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
@@ -262,12 +264,12 @@ export const JobDetailsPage = () => {
                                         <h3 className="text-lg font-semibold mb-4">Deliverable</h3>
                                         <p className="whitespace-pre-wrap break-words bg-white p-2 rounded-md">
                                         <a 
-                                            href={job.deliverable!}
+                                            href={job.deliverable![job.deliverable!.length - 1]}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-800 hover:underline"
                                         >
-                                            {decodeURIComponent(job.deliverable?.split('__').pop()?.split('?')[0] || '')}
+                                            {decodeURIComponent(job.deliverable![job.deliverable!.length - 1].split('__').pop()?.split('?')[0] || '')}
                                         </a>
                                         </p>
 
@@ -303,14 +305,26 @@ export const JobDetailsPage = () => {
                                     <h3 className="text-lg font-semibold mb-4">Deliverable</h3>
                                     <p className="whitespace-pre-wrap break-words bg-white p-2 rounded-md">
                                         <a 
-                                            href={job.deliverable!}
+                                            href={job.deliverable![job.deliverable!.length - 1]}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-800 hover:underline"
                                         >
-                                            {decodeURIComponent(job.deliverable?.split('__').pop()?.split('?')[0] || '')}
+                                            {decodeURIComponent(job.deliverable![job.deliverable!.length - 1].split('__').pop()?.split('?')[0] || '')}
                                         </a>
                                     </p>
+                                </div>
+                            )}
+
+                            {job.deliverable && job.correctionMessage &&
+                                job.deliverable.length > 0 && job.correctionMessage.length > 0 && (
+                                    <div className="mt-4 flex justify-end">
+                                    <button
+                                        className="px-4 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                        onClick={() => setIsCorrectionHistoryOpen(true)}
+                                    >
+                                        View Correction History
+                                    </button>
                                 </div>
                             )}
                             
@@ -355,7 +369,7 @@ export const JobDetailsPage = () => {
                                         <div className="mt-8">
                                             <h3 className="text-lg font-semibold mb-4">Correction Message</h3>
                                             <p className="whitespace-pre-wrap break-words">
-                                                {job.correctionMessage}
+                                                {job.correctionMessage![job.correctionMessage!.length - 1]}
                                             </p>
                                         </div>
                                     )}
@@ -449,14 +463,26 @@ export const JobDetailsPage = () => {
                                     <h3 className="text-lg font-semibold mb-4">Deliverable</h3>
                                     <p className="whitespace-pre-wrap break-words bg-white p-2 rounded-md">
                                         <a 
-                                            href={job.deliverable!}
+                                            href={job.deliverable![job.deliverable!.length - 1]}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-800 hover:underline"
                                         >
-                                            {decodeURIComponent(job.deliverable?.split('__').pop()?.split('?')[0] || '')}
+                                            {decodeURIComponent(job.deliverable![job.deliverable!.length - 1].split('__').pop()?.split('?')[0] || '')}
                                         </a>
                                     </p>
+                                </div>
+                            )}
+
+                            {job.deliverable && job.correctionMessage &&
+                                job.deliverable.length > 0 && job.correctionMessage.length > 0 && (
+                                    <div className="mt-4 flex justify-end">
+                                    <button
+                                        className="px-4 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                        onClick={() => setIsCorrectionHistoryOpen(true)}
+                                    >
+                                        Correction History
+                                    </button>
                                 </div>
                             )}
                         </div>              
@@ -533,6 +559,15 @@ export const JobDetailsPage = () => {
             {isBlockingJob && (
                 <BlockJobModal
                     onClose={handleBlockJob}
+                />
+            )}
+
+            {isCorrectionHistoryOpen && (
+                <CorrectionHistoryModal
+                    isOpen={isCorrectionHistoryOpen}
+                    onClose={() => setIsCorrectionHistoryOpen(false)}
+                    deliverables={job.deliverable ?? []}
+                    correctionMessages={job.correctionMessage ?? []}
                 />
             )}
         </div>

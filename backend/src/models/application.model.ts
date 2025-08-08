@@ -25,14 +25,14 @@ const applicationSchema = new mongoose.Schema<IApplication>({
         enum: ['Pending', 'In-Progress', 'Not Selected', 'Pending Approval', 'Completed', 'Correction'],
         default: 'Pending'
     },
-    deliveredWork: {
+    deliveredWork: [{
         type: String,
         default: null
-    },
-    correctionMessage: {
+    }],
+    correctionMessage: [{
         type: String,
         default: null
-    }
+    }]
 }, {
     timestamps: true
 });

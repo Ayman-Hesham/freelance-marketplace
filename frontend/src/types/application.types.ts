@@ -10,7 +10,9 @@ export interface Application {
         id: string;
         name: string;
         avatarUrl: string;
-    }
+    },
+    rank: number;
+    reason: string;
 }
 
 export type CreateApplicationRequest = {

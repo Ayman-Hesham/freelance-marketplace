@@ -98,24 +98,35 @@ const ApplicationDetailsPage = () => {
                         <JobsList 
                             jobs={[application]} 
                         />
+
+                        <div className="bg-grey rounded-lg p-6 shadow-md">
+                            <div className="prose max-w-none">
+                                <h2 className="text-xl font-semibold mb-4">AI Analysis:</h2>
+                                <p className="whitespace-pre-wrap break-words">
+                                    {application?.reason}
+                                </p>
+                            </div>
+                        </div> 
     
-                <div className="bg-grey rounded-lg p-6 shadow-md">
-                    <div className="prose max-w-none">
-                        <h2 className="text-xl font-semibold mb-4">Cover Letter</h2>
-                        <p className="whitespace-pre-wrap break-words">
-                            {application?.coverLetter}
-                        </p>
-                    </div>
-                    
-                    <div className="mt-8 flex justify-center">
-                        <button 
-                            onClick={() => handleAcceptClick(application.id)}
-                            className="px-6 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors"
-                        >
-                            Accept Application
-                        </button>
-                    </div>
-                </div>         
+                        <div className="bg-grey rounded-lg p-6 shadow-md mt-4">
+                            <div className="prose max-w-none">
+                                <h2 className="text-xl font-semibold mb-4">Cover Letter</h2>
+                                <p className="whitespace-pre-wrap break-words">
+                                    {application?.coverLetter}
+                                </p>
+                            </div>
+                            
+                            <div className="mt-8 flex justify-center">
+                                <button 
+                                    onClick={() => handleAcceptClick(application.id)}
+                                    className="px-6 py-2 bg-secondary-500 text-white rounded-md hover:bg-secondary-600 transition-colors"
+                                >
+                                    Accept Application
+                                </button>
+                            </div>
+                        </div> 
+
+                        
                     </>
                 )}
             </div>

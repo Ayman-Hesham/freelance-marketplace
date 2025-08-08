@@ -29,8 +29,8 @@ export interface IApplication extends mongoose.Document {
     coverLetter: string;
     portfolio: string;
     status: string;
-    deliveredWork: string;
-    correctionMessage: string;
+    deliveredWork: string[];
+    correctionMessage: string[];
 }
 
 export interface IConversation extends mongoose.Document {

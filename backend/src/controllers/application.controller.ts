@@ -84,7 +84,7 @@ export const createApplication = asyncHandler(async (req: Request, res: Response
 export const getApplicationsByFreelancerId = asyncHandler(async (req: Request, res: Response) => {
     const freelancerId = req.user?.id;
     const page = parseInt(req.query.page as string) || 1;
-    const limit = 6; // Keep consistent with other endpoints
+    const limit = 6; 
     const skip = (page - 1) * limit;
 
     const [applications, total] = await Promise.all([
@@ -227,8 +227,9 @@ export const getApplicationsByJobId = asyncHandler(async (req: Request, res: Res
             const rank = rankingResult.ranking.find(r => r.id === app.id.toString())?.rank || Infinity;
             return {
                 ...app,
-                rank
-            };
+                rank,
+                reason: rankingResult.ranking.find(r => r.id === app.id.toString())?.reason || 'No reason provided'
+            };  
         }).sort((a, b) => a.rank - b.rank);
 
         res.status(200).json({
@@ -400,7 +401,7 @@ export const submitDeliverable = asyncHandler(async (req: Request, res: Response
             throw error;
         }
 
-        application.deliveredWork = deliverableKey!;
+        application.deliveredWork.push(deliverableKey!);
         application.status = 'Pending Approval';
         await application.save({ session });
 
@@ -442,7 +443,7 @@ export const requestCorrection = asyncHandler(async (req: Request, res: Response
             throw error;
         }
 
-        application.correctionMessage = message;
+        application.correctionMessage.push(message);
         application.status = 'Correction';
         await application.save({ session });
 

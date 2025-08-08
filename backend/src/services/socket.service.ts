@@ -17,8 +17,7 @@ export function initializeSocket(server: HttpServer) {
       credentials: true,
       methods: ["GET", "POST"]
     },
-    allowEIO3: true,
-    transports: ['websocket', 'polling']
+    transports: ['websocket']
   });
 
   io.use(async (socket, next) => {
