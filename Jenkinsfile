@@ -2,15 +2,15 @@ pipeline {
     agent any
     
     environment {
-        AWS_REGION = 'ap-southeast-1'
-        S3_BUCKET = 'freelance-marketplace-deployments'
-        CODEDEPLOY_APP = 'freelance-marketplace'
+        AWS_REGION = 'us-east-1'
+        S3_BUCKET = 'your-app-deployment-bucket'
+        CODEDEPLOY_APP = 'your-app-name'
         CODEDEPLOY_GROUP = 'production'
-        GITHUB_REPO = 'https://github.com/Ayman-Hesham/freelance-marketplace'
+        GITHUB_REPO = 'your-username/your-repo'
     }
     
     triggers {
-        pollSCM('H/5 * * * *')
+        pollSCM('H/5 * * * *') 
     }
     
     stages {
@@ -18,8 +18,12 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    env.GIT_COMMIT = bat(
+                    env.GIT_COMMIT = sh(
                         script: 'git rev-parse HEAD',
+                        returnStdout: true
+                    ).trim()
+                    env.BUILD_TIMESTAMP = sh(
+                        script: 'date +%Y%m%d-%H%M%S',
                         returnStdout: true
                     ).trim()
                 }
@@ -29,23 +33,16 @@ pipeline {
         stage('Package') {
             steps {
                 script {
-                    // Generate timestamp in separate step
-                    def timestampOutput = bat(
-                        script: 'powershell -Command "Get-Date -Format yyyyMMdd-HHmmss"',
-                        returnStdout: true
-                    )
-                    def cleanTimestamp = timestampOutput.trim()
-            
-                    def artifactName = "deployment-${cleanTimestamp}-${env.BUILD_NUMBER}.zip"
+                    def artifactName = "deployment-${env.BUILD_TIMESTAMP}-${env.BUILD_NUMBER}.zip"
                     env.ARTIFACT_NAME = artifactName
-            
-                    echo "Creating artifact: ${artifactName}"
-            
-                    // Create the zip file
-                    bat "powershell -Command \"Compress-Archive -Path '.\\*' -DestinationPath '${artifactName}' -Exclude '*.git*','*.zip','node_modules','*.log' -Force\""
-            
-                    // Verify the zip file was created
-                    bat "dir ${artifactName}"
+                    
+                    sh """
+                        zip -r ${artifactName} . \\
+                            -x "*.git*" \\
+                            -x "*.zip" \\
+                            -x "node_modules/*" \\
+                            -x "*.log"
+                    """
                 }
             }
         }
@@ -53,7 +50,7 @@ pipeline {
         stage('Upload to S3') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    bat """
+                    sh """
                         aws s3 cp ${env.ARTIFACT_NAME} s3://${S3_BUCKET}/deployments/
                         aws s3 ls s3://${S3_BUCKET}/deployments/${env.ARTIFACT_NAME}
                     """
@@ -64,39 +61,30 @@ pipeline {
         stage('Deploy with CodeDeploy') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    script {
-                        // Register application revision
-                        bat """
-                            aws codedeploy register-application-revision ^
-                                --application-name ${CODEDEPLOY_APP} ^
-                                --s3-location bucket=${S3_BUCKET},key=deployments/${env.ARTIFACT_NAME},bundleType=zip ^
-                                --region ${AWS_REGION}
-                        """
+                    sh """
+                        # Register application revision
+                        aws codedeploy register-application-revision \\
+                            --application-name ${CODEDEPLOY_APP} \\
+                            --s3-location bucket=${S3_BUCKET},key=deployments/${env.ARTIFACT_NAME},bundleType=zip \\
+                            --region ${AWS_REGION}
                         
-                        // Create deployment and capture deployment ID
-                        def deploymentId = bat(
-                            script: """
-                                aws codedeploy create-deployment ^
-                                    --application-name ${CODEDEPLOY_APP} ^
-                                    --deployment-group-name ${CODEDEPLOY_GROUP} ^
-                                    --s3-location bucket=${S3_BUCKET},key=deployments/${env.ARTIFACT_NAME},bundleType=zip ^
-                                    --region ${AWS_REGION} ^
-                                    --description "Deployment from Jenkins build ${BUILD_NUMBER}" ^
-                                    --query deploymentId ^
-                                    --output text
-                            """,
-                            returnStdout: true
-                        ).trim()
+                        # Create deployment
+                        DEPLOYMENT_ID=\$(aws codedeploy create-deployment \\
+                            --application-name ${CODEDEPLOY_APP} \\
+                            --deployment-group-name ${CODEDEPLOY_GROUP} \\
+                            --s3-location bucket=${S3_BUCKET},key=deployments/${env.ARTIFACT_NAME},bundleType=zip \\
+                            --region ${AWS_REGION} \\
+                            --description "Deployment from Jenkins build ${BUILD_NUMBER}" \\
+                            --query 'deploymentId' \\
+                            --output text)
                         
-                        echo "Deployment ID: ${deploymentId}"
+                        echo "Deployment ID: \$DEPLOYMENT_ID"
                         
-                        // Wait for deployment
-                        bat """
-                            aws codedeploy wait deployment-successful ^
-                                --deployment-id ${deploymentId} ^
-                                --region ${AWS_REGION}
-                        """
-                    }
+                        # Wait for deployment
+                        aws codedeploy wait deployment-successful \\
+                            --deployment-id \$DEPLOYMENT_ID \\
+                            --region ${AWS_REGION}
+                    """
                 }
             }
         }
@@ -104,14 +92,7 @@ pipeline {
     
     post {
         always {
-            bat 'if exist *.zip del /q *.zip'
-        }
-        success {
-            echo "Pipeline completed successfully!"
-            echo "Deployed artifact: ${env.ARTIFACT_NAME}"
-        }
-        failure {
-            echo "Pipeline failed. Check the logs above for details."
+            sh 'rm -f *.zip'
         }
     }
 }
