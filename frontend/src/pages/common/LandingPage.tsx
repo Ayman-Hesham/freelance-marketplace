@@ -80,7 +80,7 @@ export const LandingPage = () => {
           <div className="flex flex-col items-center text-center">
             <Users className="w-16 h-16 text-secondary-500 mb-6" />
             <h2 className="text-3xl lg:text-4xl font-bold text-primary-500 mb-4">
-              Join Our Global Community
+              Join Our Community
             </h2>
             <p className="text-xl text-primary-400 max-w-2xl">
               Whether you're looking to hire or be hired, our platform connects talented professionals with great opportunities worldwide.
