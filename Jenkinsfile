@@ -22,12 +22,6 @@ pipeline {
                         script: 'git rev-parse HEAD',
                         returnStdout: true
                     ).trim()
-                    
-                    // Generate clean timestamp without spaces or special characters
-                    env.BUILD_TIMESTAMP = bat(
-                        script: 'powershell -Command "Get-Date -Format \'yyyyMMdd-HHmmss\'"',
-                        returnStdout: true
-                    ).trim()
                 }
             }
         }
@@ -35,7 +29,13 @@ pipeline {
         stage('Package') {
             steps {
                 script {
-                    def artifactName = "deployment-${env.BUILD_TIMESTAMP}-${env.BUILD_NUMBER}.zip"
+                    // Generate timestamp directly here instead of using env.BUILD_TIMESTAMP
+                    def cleanTimestamp = bat(
+                        script: 'powershell -Command "Get-Date -Format \'yyyyMMdd-HHmmss\'"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    def artifactName = "deployment-${cleanTimestamp}-${env.BUILD_NUMBER}.zip"
                     env.ARTIFACT_NAME = artifactName
             
                     bat """
