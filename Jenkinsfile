@@ -29,19 +29,21 @@ pipeline {
         stage('Package') {
             steps {
                 script {
-                    // Generate timestamp directly here instead of using env.BUILD_TIMESTAMP
-                    def cleanTimestamp = bat(
-                        script: 'powershell -Command "Get-Date -Format \'yyyyMMdd-HHmmss\'"',
+                    // Generate timestamp in separate step
+                    def timestampOutput = bat(
+                        script: 'powershell -Command "Get-Date -Format yyyyMMdd-HHmmss"',
                         returnStdout: true
-                    ).trim()
-                    
+                    )
+                    def cleanTimestamp = timestampOutput.trim()
+            
                     def artifactName = "deployment-${cleanTimestamp}-${env.BUILD_NUMBER}.zip"
                     env.ARTIFACT_NAME = artifactName
             
-                    bat """
-                        powershell -Command "Compress-Archive -Path '.\\*' -DestinationPath '${artifactName}' -Exclude '*.git*','*.zip','node_modules','*.log' -Force"
-                    """
-                    
+                    echo "Creating artifact: ${artifactName}"
+            
+                    // Create the zip file
+                    bat "powershell -Command \"Compress-Archive -Path '.\\*' -DestinationPath '${artifactName}' -Exclude '*.git*','*.zip','node_modules','*.log' -Force\""
+            
                     // Verify the zip file was created
                     bat "dir ${artifactName}"
                 }
