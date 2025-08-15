@@ -18,11 +18,11 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    env.GIT_COMMIT = sh(
+                    env.GIT_COMMIT = bat(
                         script: 'git rev-parse HEAD',
                         returnStdout: true
                     ).trim()
-                    env.BUILD_TIMESTAMP = sh(
+                    env.BUILD_TIMESTAMP = bat(
                         script: 'date +%Y%m%d-%H%M%S',
                         returnStdout: true
                     ).trim()
@@ -36,7 +36,7 @@ pipeline {
                     def artifactName = "deployment-${env.BUILD_TIMESTAMP}-${env.BUILD_NUMBER}.zip"
                     env.ARTIFACT_NAME = artifactName
                     
-                    sh """
+                    bat """
                         zip -r ${artifactName} . \\
                             -x "*.git*" \\
                             -x "*.zip" \\
@@ -50,7 +50,7 @@ pipeline {
         stage('Upload to S3') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    sh """
+                    bat """
                         aws s3 cp ${env.ARTIFACT_NAME} s3://${S3_BUCKET}/deployments/
                         aws s3 ls s3://${S3_BUCKET}/deployments/${env.ARTIFACT_NAME}
                     """
@@ -61,7 +61,7 @@ pipeline {
         stage('Deploy with CodeDeploy') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    sh """
+                    bat """
                         # Register application revision
                         aws codedeploy register-application-revision \\
                             --application-name ${CODEDEPLOY_APP} \\
@@ -92,7 +92,7 @@ pipeline {
     
     post {
         always {
-            sh 'rm -f *.zip'
+            bat 'rm -f *.zip'
         }
     }
 }
