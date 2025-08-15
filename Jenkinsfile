@@ -35,13 +35,9 @@ pipeline {
                 script {
                     def artifactName = "deployment-${env.BUILD_TIMESTAMP}-${env.BUILD_NUMBER}.zip"
                     env.ARTIFACT_NAME = artifactName
-                    
+            
                     bat """
-                        zip -r ${artifactName} . \\
-                            -x "*.git*" \\
-                            -x "*.zip" \\
-                            -x "node_modules/*" \\
-                            -x "*.log"
+                        powershell -Command "Compress-Archive -Path '.\\*' -DestinationPath '${artifactName}' -Exclude '*.git*','*.zip','node_modules','*.log' -Force"
                     """
                 }
             }
