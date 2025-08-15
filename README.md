@@ -16,6 +16,7 @@ Freelance Marketplace is a comprehensive platform designed to streamline the pro
 - **📊 Project Workflow**: Comprehensive job status tracking from posting to completion
 - **👤 User Profiles**: Rich profiles with avatars, bio, portfolio links, and sentiment tracking
 - **🛡️ Admin Controls**: Administrative features for platform moderation
+- **🚀 Automated CI/CD**: Continuous integration and deployment with Jenkins and AWS CodeDeploy
 
 ### User Types
 
@@ -47,95 +48,16 @@ Freelance Marketplace is a comprehensive platform designed to streamline the pro
 - **Nginx** reverse proxy with SSL support
 - **MongoDB Atlas** for database hosting
 - **AWS S3** for file storage
+- **AWS EC2** for application hosting
+- **AWS CodeDeploy** for automated deployment orchestration
+- **Jenkins** for continuous integration and build automation
+- **IAM Roles** for secure AWS service authentication
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- Docker and Docker Compose
-- MongoDB Atlas account
-- AWS account with S3 bucket
-- Google AI API key (Gemini)
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Database
-MONGODB_URI=your_mongodb_connection_string
-
-# JWT
-JWT_SECRET=your_jwt_secret_key
-
-# AWS S3
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_REGION=your_aws_region
-AWS_S3_BUCKET_NAME=your_s3_bucket_name
-
-# Google AI
-GEMINI_API_KEY=your_gemini_api_key
-
-# Application
-DATABASE_URL=your_mongodb_connection_string
-```
-
-### Installation & Development
-
-#### Option 1: Docker (Recommended)
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd freelance-marketplace
-   ```
-
-2. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. **Run with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Access the application**
-   - Frontend: http://localhost:80
-   - Backend API: http://localhost:5000
-
-#### Option 2: Local Development
-
-1. **Install Backend Dependencies**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-2. **Install Frontend Dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-3. **Start Backend Development Server**
-   ```bash
-   cd backend
-   npm run dev
-   ```
-
-4. **Start Frontend Development Server**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
-5. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
+### CI/CD Pipeline
+- **Source Control**: GitHub with webhook integration
+- **Build Server**: Jenkins
+- **Artifact Storage**: AWS S3 for deployment packages
+- **Deployment**: AWS CodeDeploy with automated rollback capabilities
 
 ## 📁 Project Structure
 ```bash
@@ -162,8 +84,15 @@ freelance-marketplace/
 │ │ └── utils/ # Utility functions
 │ ├── nginx.conf # Nginx configuration
 │ └── Dockerfile # Frontend container configuration
+├── scripts/ # CI/CD deployment scripts
+│ ├── install_dependencies.sh # Install system dependencies
+│ ├── stop_server.sh # Stop application services
+│ ├── start_server.sh # Start application services
+│ └── validate_service.sh # Post-deployment validation
+├── appspec.yml # AWS CodeDeploy configuration
+├── Jenkinsfile # Jenkins pipeline configuration
 ├── docker-compose.yml # Multi-container Docker setup
-├── deploy.sh # Deployment script
+├── deploy.sh # Manual deployment script (legacy)
 └── backup.sh # Database backup script
 ```
 ## 🔥 Key Features Deep Dive
@@ -193,74 +122,37 @@ freelance-marketplace/
 - Image optimization with Sharp
 - Presigned URLs for secure file access
 
-## 🚢 Deployment
+## 🚀 CI/CD Pipeline
 
-### Production Deployment
+### Pipeline Architecture
+The CI/CD pipeline follows a modern DevOps approach with the following flow:
 
-1. **Set up your server** with Docker and Docker Compose
+1. **Code Commit** → GitHub repository
+2. **Webhook Trigger** → Jenkins pipeline activation
+3. **Build & Test** → Automated testing and artifact creation
+4. **Package** → Application bundled with deployment scripts
+5. **Deploy** → AWS CodeDeploy orchestrates deployment to EC2
+6. **Validate** → Automated service validation and health checks
 
-2. **Configure environment variables** in your `.env` file
+### Pipeline Configuration
+**Github Integration**
+```bash
+triggers {
+    pollSCM('H/5 * * * *') // Check for changes every 5 minutes
+}
+```
+### Jenkins Pipeline Stages
+1. **Checkout**: Pull latest code from GitHub
+2. **Validate**: Check required files and configurations
+3. **Package**: Create deployment artifact with all necessary files
+4. **Upload**: Store artifact in S3 for CodeDeploy
+5. **Deploy**: Trigger CodeDeploy for zero-downtime deployment
+6. **Verify**: Validate deployment success and application health
 
-3. **Set up SSL certificates** in the `ssl/` directory
-
-4. **Run the deployment script**
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-
-5. **Set up backup cron job** (optional)
-   ```bash
-   chmod +x backup.sh
-   # Add to crontab for automated backups
-   ```
-
-### Docker Services
-
-The application runs with the following services:
-- **Frontend**: Nginx server serving React app (ports 80, 443)
-- **Backend**: Node.js API server (internal port 5000)
-- **Volumes**: Persistent storage for uploads and logs
-
-## 🛠️ Development
-
-### Available Scripts
-
-**Backend:**
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build TypeScript to JavaScript
-- `npm start` - Start production server
-
-**Frontend:**
-- `npm run dev` - Start Vite development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-### API Endpoints
-
-- **Authentication**: `/api/auth/*`
-- **Users**: `/api/users/*`
-- **Jobs**: `/api/jobs/*`
-- **Applications**: `/api/applications/*`
-- **Messages**: `/api/messages/*`
-- **Conversations**: `/api/conversations/*`
-
-## 🔧 Configuration
-
-### MongoDB Setup
-The application uses MongoDB Atlas. Ensure your connection string includes:
-- Database name
-- Proper authentication credentials
-- Network access configuration
-
-### AWS S3 Setup
-Configure S3 bucket with:
-- Public read access for portfolio files
-- CORS configuration for frontend uploads
-- Proper IAM permissions
-
-### Google AI Setup
-Obtain Gemini API key from Google AI Studio and ensure:
-- API is enabled for your project
-- Proper quotas and billing setup
+### Deployment Scripts
+The application includes the following deployment automation scripts:
+- **appspec.yml**: CodeDeploy configuration defining deployment lifecycle
+- **scripts/install_dependencies.sh**: Install Docker, Docker Compose, and system dependencies
+- **scripts/stop_server.sh**: Gracefully stop existing application containers
+- **scripts/start_server.sh**: Build and start application with health checks
+- **scripts/validate_service.sh**: Post-deployment validation and testing
