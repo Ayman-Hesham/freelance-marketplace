@@ -23,7 +23,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     env.BUILD_TIMESTAMP = bat(
-                        script: 'date +%Y%m%d-%H%M%S',
+                        script: 'echo %date%_%time%',
                         returnStdout: true
                     ).trim()
                 }
@@ -92,7 +92,7 @@ pipeline {
     
     post {
         always {
-            bat 'rm -f *.zip'
+            bat 'if exist *.zip del /q *.zip'
         }
     }
 }
